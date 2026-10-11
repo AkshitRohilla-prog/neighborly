@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neighborly</title>
+<meta name="description" content="Share extra food with your neighbors before it goes to waste.">
+<meta name="theme-color" content="#2E6B3F">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%232E6B3F' d='M20 4C11 4 5 8.5 5 15c0 1.6.4 3 1 4.2C7.5 14 11 10.5 15 9c-3.4 2.2-6 5.4-7.4 10.4.9.4 2 .6 3.1.6C17 20 20 13 20 4z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F1E8; --card:#FFFFFF; --ink:#1E2B20; --muted:#55624F; --soft:#6B7566;
+  --line:#E3DFD2; --line2:#D9D4C4;
+  --green:#2E6B3F; --green-dk:#1E4A2A; --green-lt:#E6EEDB; --green-md:#D7E3CC;
+  --warn:#8A3410; --warn-bg:#FBE3D6; --warn-line:#B4531F;
+  --radius:20px; --shadow:0 2px 10px rgba(30,43,32,.06);
+  --serif:'Fraunces',Georgia,serif; --sans:'DM Sans',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.45;padding-bottom:84px}
+a{color:var(--green)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+img{max-width:100%;display:block}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #7FB08A;outline-offset:2px;border-radius:8px}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:20;background:rgba(244,241,232,.94);backdrop-filter:blur(8px);border-bottom:1px solid transparent}
+.topbar .in{max-width:1120px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:16px}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--green-dk)}
+.logo b{font-family:var(--serif);font-size:24px;font-weight:700}
+.loc{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.topnav{display:none;gap:4px;margin-left:auto}
+.topnav a{padding:10px 14px;border-radius:999px;text-decoration:none;color:var(--ink);font-weight:500;font-size:15px}
+.topnav a.on{background:var(--green-lt);color:var(--green-dk);font-weight:700}
+.iconbtn{width:44px;height:44px;border-radius:14px;border:none;background:transparent;display:flex;align-items:center;justify-content:center;margin-left:auto;position:relative}
+.dot{position:absolute;top:10px;right:11px;width:8px;height:8px;border-radius:9px;background:#D2691E}
+
+/* ---------- bottom tabs (phone) ---------- */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:6px 4px calc(10px + env(safe-area-inset-bottom))}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;text-decoration:none;font-size:11px;font-weight:500;color:var(--soft)}
+.tabbar a.on{color:var(--green);font-weight:700}
+
+main{max-width:1120px;margin:0 auto;padding:0 16px 32px}
+h1,h2,h3{margin:0}
+.serif{font-family:var(--serif);font-weight:700}
+.muted{color:var(--muted)}
+
+/* ---------- buttons ---------- */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 22px;border-radius:999px;font-size:16px;font-weight:700;text-decoration:none;border:1.5px solid var(--green);background:var(--green);color:#fff}
+.btn:hover{background:var(--green-dk);border-color:var(--green-dk)}
+.btn.ghost{background:#fff;color:var(--green)}
+.btn.ghost:hover{background:var(--green-lt)}
+.btn.dark{background:var(--ink);border-color:var(--ink)}
+.btn.danger{background:#fff;color:var(--warn);border-color:var(--line2)}
+.btn.sm{min-height:44px;font-size:14px;padding:0 16px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.linkbtn{background:none;border:none;color:var(--warn);font-weight:700;font-size:14px;min-height:44px;padding:0 8px}
+
+/* ---------- chips & badges ---------- */
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips.scroll{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.chip{flex-shrink:0;min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line2);background:#fff;font-size:14px;font-weight:500;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}
+.chip.diet[aria-pressed="true"]{background:var(--green-lt);border-color:var(--green);color:var(--green-dk)}
+.chip.warn[aria-pressed="true"]{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn)}
+.badge{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:700;background:var(--green-lt);color:var(--green-dk);white-space:nowrap}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
+.badge.grey{background:#ECE8DC;color:var(--muted)}
+.badge.alert{background:var(--warn);color:#fff}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+
+/* ---------- home ---------- */
+.hero{margin-top:12px;padding:26px 22px;border-radius:26px;background:var(--green-lt);position:relative;overflow:hidden}
+.hero h1{font-family:var(--serif);font-size:clamp(32px,6vw,52px);line-height:1.04;color:var(--green-dk);max-width:12ch}
+.hero p{margin:12px 0 0;color:#3F4D3B;max-width:34ch}
+.hero .art{position:absolute;right:-10px;top:14px;width:90px;opacity:.35;pointer-events:none}
+.hero .ctas{display:flex;flex-direction:column;gap:10px;margin-top:20px;position:relative}
+.steps{display:grid;gap:10px;margin-top:16px}
+.step{background:#fff;border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center}
+.step i{font-style:normal;width:34px;height:34px;flex-shrink:0;border-radius:99px;background:var(--green-md);color:var(--green-dk);font-weight:700;display:flex;align-items:center;justify-content:center}
+.sechead{display:flex;align-items:baseline;justify-content:space-between;margin:28px 4px 10px}
+.sechead h2{font-size:19px}
+.sechead a{font-size:14px;font-weight:700;text-decoration:none;padding:8px 0}
+.alertcard{margin-top:16px;padding:16px;border-radius:20px;background:var(--green-dk);color:#fff;display:flex;gap:12px;align-items:center}
+.alertcard small{display:block;color:#CFE3BF;font-size:13px}
+
+/* ---------- food cards ---------- */
+.list{display:grid;gap:12px}
+.card{display:flex;gap:12px;background:var(--card);border-radius:var(--radius);padding:10px;text-decoration:none;color:var(--ink);box-shadow:var(--shadow);border:1.5px solid transparent;transition:border-color .15s,transform .15s}
+.card:hover{border-color:var(--green-md);transform:translateY(-1px)}
+.card .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.card .row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.card .name{font-weight:700;font-size:16px;line-height:1.25}
+.card .meta{font-size:13px;color:var(--muted)}
+.card .by{font-size:12px;color:var(--soft);display:flex;align-items:center;gap:6px;margin-top:auto}
+.card.gone{opacity:.6;box-shadow:none;background:#EBE8DE}
+.tile{width:92px;height:92px;flex-shrink:0;border-radius:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:rgba(30,43,32,.55)}
+.tile img{width:100%;height:100%;object-fit:cover}
+.av{width:22px;height:22px;border-radius:99px;background:var(--green-md);color:var(--green-dk);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.empty{text-align:center;padding:40px 16px;color:var(--muted);background:#fff;border-radius:var(--radius);grid-column:1/-1}
+
+/* ---------- discover ---------- */
+.search{display:flex;align-items:center;gap:8px;height:50px;padding:0 16px;border-radius:999px;background:#fff;border:1px solid var(--line);margin-top:14px}
+.search input{border:none;outline:none;background:transparent;flex:1;min-width:0;font-size:16px}
+.pagehead{margin:18px 4px 0}
+.pagehead h1{font-family:var(--serif);font-size:30px}
+.pagehead p{margin:4px 0 0;color:var(--muted)}
+
+/* ---------- details ---------- */
+.detail{display:grid;gap:0;margin:0 -16px}
+.photo{height:280px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.photo img{width:100%;height:100%;object-fit:cover}
+.photo .back{position:absolute;top:14px;left:14px;width:44px;height:44px;border-radius:99px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow)}
+.photo .badge{position:absolute;bottom:34px;left:16px;height:32px;font-size:14px;padding:0 12px}
+.info{background:var(--bg);border-radius:24px 24px 0 0;margin-top:-22px;position:relative;padding:22px 20px 8px;display:flex;flex-direction:column;gap:18px}
+.info h1{font-family:var(--serif);font-size:30px;line-height:1.1}
+.facts{display:grid;gap:10px}
+.fact{display:flex;gap:10px;align-items:center}
+.fact svg{color:var(--green);flex-shrink:0}
+.warnbox{background:var(--warn-bg);border-radius:16px;padding:12px 14px;display:flex;gap:10px;color:#6E2A0C;font-size:14px}
+.warnbox svg{color:var(--warn);flex-shrink:0}
+.person{background:#fff;border-radius:16px;padding:12px;display:flex;align-items:center;gap:12px}
+.person .av{width:44px;height:44px;font-size:16px}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper button{width:44px;height:44px;border-radius:99px;border:1.5px solid var(--line2);background:#fff;font-size:20px}
+.stepper output{min-width:28px;text-align:center;font-size:20px;font-weight:700}
+.claimrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.panel{background:#fff;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px}
+
+/* ---------- forms ---------- */
+.narrow{max-width:600px;margin:0 auto}
+.form{display:flex;flex-direction:column;gap:16px;margin-top:16px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.field legend{font-size:14px;font-weight:700;padding:0}
+.field small{font-size:12px;color:var(--muted)}
+.field input,.field select,.field textarea{min-height:50px;border:1px solid var(--line2);border-radius:12px;padding:0 14px;font-size:16px;background:#fff;width:100%;min-width:0}
+.field textarea{padding:12px 14px;min-height:84px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green);outline:none;box-shadow:0 0 0 3px rgba(46,107,63,.15)}
+fieldset{border:none;margin:0;padding:0;min-width:0}
+fieldset legend{margin-bottom:8px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.qty{display:grid;grid-template-columns:1fr 1.2fr;gap:8px}
+.photopick{height:130px;border:1.5px dashed #BFC8B4;border-radius:18px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#3F4D3B;font-weight:500;font-size:14px;overflow:hidden;position:relative;cursor:pointer}
+.photopick img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photopick input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.err{color:var(--warn);font-size:13px;font-weight:700}
+.field.bad input{border-color:var(--warn-line)}
+
+/* ---------- claims / profile ---------- */
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:#E9E5D8;border-radius:999px;padding:4px;margin-top:14px;max-width:520px}
+.seg button{min-height:42px;border:none;border-radius:999px;background:transparent;font-size:14px;font-weight:500;color:#3F4D3B}
+.seg button[aria-selected="true"]{background:var(--green);color:#fff;font-weight:700}
+.item{background:#fff;border-radius:var(--radius);padding:12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
+.item .top{display:flex;gap:12px;align-items:center;text-decoration:none;color:inherit}
+.item .tile{width:64px;height:64px}
+.item .acts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.bar{height:8px;border-radius:99px;background:#EEF2E8;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--green);border-radius:99px}
+.profilehead{display:flex;align-items:center;gap:14px;margin-top:20px}
+.profilehead .av{width:64px;height:64px;font-size:26px}
+.impact{margin-top:18px;padding:18px;border-radius:22px;background:var(--green-lt)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px;text-align:center}
+.stats div{background:#fff;border-radius:16px;padding:12px 6px}
+.stats b{display:block;font-family:var(--serif);font-size:26px;color:var(--green-dk)}
+.stats span{font-size:12px;color:var(--muted)}
+.done{text-align:center;padding-top:16px}
+.done h1{font-family:var(--serif);font-size:34px;color:var(--green-dk);margin-top:10px}
+
+/* ---------- toast ---------- */
+#toast{position:fixed;left:50%;bottom:100px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:14px;font-weight:500;font-size:15px;opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:calc(100% - 32px);text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- bigger screens ---------- */
+@media (min-width:700px){
+  .list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hero .ctas{flex-direction:row}
+  .steps{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .stack2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+}
+@media (min-width:900px){
+  body{padding-bottom:0}
+  .tabbar{display:none}
+  .topnav{display:flex}
+  .topbar{border-bottom-color:var(--line)}
+  #toast{bottom:32px}
+  .hero{padding:48px 44px;margin-top:24px}
+  .hero .art{width:220px;right:40px;top:auto;bottom:0;opacity:.6}
+  .topnav + .iconbtn{margin-left:0}
+  .detail{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:36px;margin:24px 0 0;align-items:start}
+  .photo{height:460px;border-radius:26px;position:sticky;top:90px}
+  .photo .badge{bottom:16px}
+  .info{margin-top:0;padding:0;background:transparent}
+  .info h1{font-size:38px}
+}
+@media (min-width:1050px){
+  .list.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="in">
+    <a href="#/home" class="logo" aria-label="Neighborly home">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="#2E6B3F" aria-hidden="true"><path d="M20 4C11 4 5 8.5 5 15c0 1.6.4 3 1 4.2C7.5 14 11 10.5 15 9c-3.4 2.2-6 5.4-7.4 10.4.9.4 2 .6 3.1.6C17 20 20 13 20 4z"/></svg>
+      <b>Neighborly</b>
+    </a>
+    <nav class="topnav" aria-label="Main" id="topnav"></nav>
+    <button class="iconbtn" type="button" id="bell" aria-label="Alerts (coming soon)">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="app" tabindex="-1"></main>
+
+<nav class="tabbar" aria-label="Main" id="tabbar"></nav>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+/* =====================================================================
+   DATA LAYER
+   ---------------------------------------------------------------------
+   Version 1 keeps everything in this browser (localStorage), so posts
+   are only visible on this device.
+   Version 2 plan: replace the functions inside `DB` with Firebase calls.
+   Nothing else in the app reads or writes storage directly, so the
+   screens below do not need to change.
+   ===================================================================== */
+const STORAGE_KEY = 'neighborly-v1';
+const HOUR = 3600e3, MIN = 60e3;
+
+const DB = (() => {
+  let state = null;
+
+  function seed() {
+    const now = Date.now();
+    const id = () => Math.random().toString(36).slice(2, 10);
+    const lena = id(), mia = id(), jonas = id(), emma = id(), pasta = id(), rolls = id();
+    return {
+      profile: { name: '', building: '', allergies: [] },
+      posts: [
+        { id: lena, name: 'Vegetable biryani', category: 'Meal', total: 6, left: 6, unit: 'portions',
+          cookedAt: now - 1 * HOUR, until: now + 2.5 * HOUR, spot: 'Building B, table by the mailboxes',
+          note: "Made too much for a party. It's covered with foil, please bring your own box!",
+          tags: ['Vegetarian', 'Nuts'], by: 'Lena', mine: false, photo: null, createdAt: now - 40 * MIN },
+        { id: mia, name: 'Birthday cake', category: 'Baked', total: 8, left: 5, unit: 'slices',
+          cookedAt: now - 20 * HOUR, until: now + 45 * MIN, spot: 'Building A, lobby fridge',
+          note: 'Chocolate cake from my daughter’s birthday. Plates are next to it.',
+          tags: ['Vegetarian', 'Dairy', 'Gluten', 'Egg'], by: 'Mia', mine: false, photo: null, createdAt: now - 3 * HOUR },
+        { id: jonas, name: 'Garden tomatoes', category: 'Fruit & veg', total: 4, left: 4, unit: 'bags',
+          cookedAt: now - 5 * HOUR, until: now + 22 * HOUR, spot: 'Courtyard bench',
+          note: 'Picked this morning from the balcony garden. About half a kilo per bag.',
+          tags: ['Vegan'], by: 'Jonas', mine: false, photo: null, createdAt: now - 2 * HOUR },
+        { id: emma, name: 'Fresh lettuce', category: 'Fruit & veg', total: 3, left: 2, unit: 'heads',
+          cookedAt: now - 6 * HOUR, until: now + 7 * HOUR, spot: 'Building C, entrance shelf',
+          note: 'Too much from the market box this week.',
+          tags: ['Vegan'], by: 'Emma', mine: false, photo: null, createdAt: now - 90 * MIN },
+        { id: pasta, name: 'Pasta salad', category: 'Meal', total: 5, left: 2, unit: 'portions',
+          cookedAt: now - 3 * HOUR, until: now + 4 * HOUR, spot: 'Building B, table by the mailboxes',
+          note: 'With olives and feta. Kept in the fridge until now.',
+          tags: ['Vegetarian', 'Dairy', 'Gluten'], by: 'You', mine: true, photo: null, createdAt: now - 2 * HOUR },
+        { id: rolls, name: 'Bread rolls', category: 'Baked', total: 10, left: 0, unit: 'pieces',
+          cookedAt: now - 30 * HOUR, until: now - 18 * HOUR, spot: 'Building A, lobby fridge',
+          note: '', tags: ['Vegan', 'Gluten'], by: 'Noah', mine: false, photo: null, createdAt: now - 28 * HOUR }
+      ],
+      claims: [
+        { id: id(), postId: rolls, portions: 2, at: now - 26 * HOUR, status: 'picked' }
+      ]
+    };
+  }
+
+  function load() {
+    try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { state = null; }
+    if (!state || !Array.isArray(state.posts)) { state = seed(); save(); }
+  }
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); return true; }
+    catch (e) { toast('Could not save. Try a smaller photo.'); return false; }
+  }
+  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+  load();
+  return {
+    posts: () => state.posts.slice(),
+    post: (id) => state.posts.find((p) => p.id === id) || null,
+    addPost(data) {
+      const p = { ...data, id: newId(), left: data.total, mine: true, createdAt: Date.now() };
+      state.posts.unshift(p);
+      if (!save()) { state.posts.shift(); return null; }
+      return p;
+    },
+    updatePost(id, changes) {
+      const p = this.post(id); if (!p) return;
+      Object.assign(p, changes); save();
+    },
+    deletePost(id) {
+      state.posts = state.posts.filter((p) => p.id !== id);
+      state.claims = state.claims.filter((c) => c.postId !== id);
+      save();
+    },
+    claims: () => state.claims.slice(),
+    claim: (id) => state.claims.find((c) => c.id === id) || null,
+    makeClaim(postId, portions) {
+      const p = this.post(postId);
+      if (!p || p.left < portions) return null;
+      p.left -= portions;
+      const c = { id: newId(), postId, portions, at: Date.now(), status: 'ready' };
+      state.claims.unshift(c); save();
+      return c;
+    },
+    setClaimStatus(id, status) {
+      const c = this.claim(id); if (!c) return;
+      if (status === 'returned' && c.status === 'ready') {
+        const p = this.post(c.postId); if (p) p.left = Math.min(p.total, p.left + c.portions);
+      }
+      c.status = status; save();
+    },
+    profile: () => ({ ...state.profile }),
+    setProfile(changes) { Object.assign(state.profile, changes); save(); },
+    reset() { state = seed(); save(); }
+  };
+})();
+
+/* =====================================================================
+   HELPERS
+   ===================================================================== */
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const WARN_TAGS = ['Nuts', 'Dairy', 'Gluten', 'Egg'];
+const DIET_TAGS = ['Vegetarian', 'Vegan', 'Spicy'];
+const CATEGORIES = {
+  'Meal':        { color: '#F0D49A', icon: '<path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5"/>' },
+  'Fruit & veg': { color: '#CFE1B9', icon: '<path d="M12 8c-4 0-7 3-7 7s3 6 7 6 7-2 7-6-3-7-7-7z"/><path d="M12 8c0-2 1-4 3-5M12 8c-1-2-3-3-5-3"/>' },
+  'Baked':       { color: '#EBD3B8', icon: '<path d="M4 12c0-4 3.6-6 8-6s8 2 8 6v6H4z"/><path d="M9 9l-1 3M13 9l-1 3M17 9l-1 3"/>' },
+  'Other':       { color: '#DCD7E8', icon: '<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/>' }
+};
+const ICONS = {
+  home: '<path d="M4 10l8-6 8 6v10H4z"/>',
+  discover: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+  share: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+  claims: '<path d="M6 4h12v16l-6-4-6 4z"/>',
+  profile: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
+  pin: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  pot: '<path d="M4 9h16v4a8 8 0 0 1-16 0z"/><path d="M2 9h20"/>',
+  cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',
+  warn: '<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
+  back: '<path d="M15 6l-6 6 6 6"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>',
+  camera: '<path d="M4 7h3l2-3h6l2 3h3v12H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  wa: '<path d="M4 20l1.4-4.3A8 8 0 1 1 8.6 19z"/>'
+};
+const svg = (name, size = 20, extra = '') =>
+  `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${ICONS[name] || CATEGORIES[name]?.icon || ''}</svg>`;
+
+const isActive = (p) => p.left > 0 && p.until > Date.now();
+const initial = (name) => esc((name || '?').trim().charAt(0).toUpperCase() || '?');
+const giverName = (p) => (p.mine ? (DB.profile().name || 'You') : p.by);
+
+function timeLeft(until) {
+  const d = until - Date.now();
+  if (d <= 0) return { text: 'Expired', cls: 'grey' };
+  const m = Math.round(d / MIN);
+  if (m < 60) return { text: `${m} min left`, cls: 'alert' };
+  const h = Math.floor(m / 60), rest = m % 60;
+  if (h < 24) return { text: rest && h < 6 ? `${h}h ${rest}m left` : `${h}h left`, cls: h < 2 ? 'warn' : '' };
+  return { text: `${Math.round(h / 24)}d left`, cls: '' };
+}
+function timeBadge(p) {
+  if (p.left <= 0) return `<span class="badge grey">All gone</span>`;
+  const t = timeLeft(p.until);
+  return `<span class="badge ${t.cls}" data-until="${p.until}">${t.text}</span>`;
+}
+function fmtWhen(ts) {
+  const d = new Date(ts), now = new Date();
+  const hm = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const day = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  if (ts >= day && ts < day + 24 * HOUR) return `today ${hm}`;
+  if (ts >= day + 24 * HOUR && ts < day + 48 * HOUR) return `tomorrow ${hm}`;
+  if (ts >= day - 24 * HOUR && ts < day) return `yesterday ${hm}`;
+  return d.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + hm;
+}
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+function tile(p, size) {
+  const c = CATEGORIES[p.category] || CATEGORIES.Other;
+  const style = `background:${c.color}` + (size ? `;width:${size}px;height:${size}px` : '');
+  if (p.photo) return `<div class="tile" style="${style}"><img src="${p.photo}" alt=""></div>`;
+  return `<div class="tile" style="${style}">${svg(p.category, size && size < 70 ? 26 : 36)}</div>`;
+}
+function tagBadges(p) {
+  return p.tags.map((t) => `<span class="badge ${WARN_TAGS.includes(t) ? 'warn' : ''}">${esc(t)}</span>`).join('');
+}
+function allergyClash(p) {
+  const mine = DB.profile().allergies || [];
+  return p.tags.filter((t) => mine.includes(t));
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+/* Shrinks a photo so it fits in browser storage. */
+function readPhoto(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const max = 640, s = Math.min(1, max / Math.max(img.width, img.height));
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        resolve(cv.toDataURL('image/jpeg', 0.72));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* =====================================================================
+   NAVIGATION
+   ===================================================================== */
+const TABS = [
+  { key: 'home', label: 'Home', href: '#/home' },
+  { key: 'discover', label: 'Discover', href: '#/discover' },
+  { key: 'share', label: 'Share', href: '#/share' },
+  { key: 'claims', label: 'Claims', href: '#/claims' },
+  { key: 'profile', label: 'Profile', href: '#/profile' }
+];
+function renderNav(active) {
+  $('#tabbar').innerHTML = TABS.map((t) =>
+    `<a href="${t.href}" class="${t.key === active ? 'on' : ''}" ${t.key === active ? 'aria-current="page"' : ''}>${svg(t.key, 22)}${t.label}</a>`).join('');
+  $('#topnav').innerHTML = TABS.map((t) =>
+    `<a href="${t.href}" class="${t.key === active ? 'on' : ''}" ${t.key === active ? 'aria-current="page"' : ''}>${t.label}</a>`).join('');
+}
+
+const routes = {
+  home: { tab: 'home', view: viewHome },
+  discover: { tab: 'discover', view: viewDiscover },
+  food: { tab: 'discover', view: viewFood },
+  claimed: { tab: 'claims', view: viewClaimed },
+  share: { tab: 'share', view: viewShare },
+  claims: { tab: 'claims', view: viewClaims },
+  profile: { tab: 'profile', view: viewProfile }
+};
+function render() {
+  const [, name = 'home', arg] = (location.hash || '#/home').split('/');
+  const r = routes[name] || routes.home;
+  renderNav(r.tab);
+  const app = $('#app');
+  app.innerHTML = '';
+  r.view(app, arg && decodeURIComponent(arg));
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', render);
+
+/* Keeps countdowns fresh without redrawing the page (so forms are not wiped). */
+setInterval(() => {
+  $$('[data-until]').forEach((el) => {
+    const t = timeLeft(Number(el.dataset.until));
+    el.textContent = t.text;
+    el.className = 'badge ' + t.cls;
+  });
+}, 30e3);
+
+/* =====================================================================
+   SCREENS
+   ===================================================================== */
+function foodCard(p) {
+  const clash = allergyClash(p);
+  return `
+  <a class="card ${isActive(p) ? '' : 'gone'}" href="#/food/${p.id}">
+    ${tile(p)}
+    <div class="body">
+      <div class="row"><span class="name">${esc(p.name)}</span>${timeBadge(p)}</div>
+      <span class="meta">${p.left} ${esc(p.unit)} left · ${esc(p.spot)}</span>
+      <div class="tags">${clash.length ? `<span class="badge alert">${svg('warn', 12)} Has your allergen: ${esc(clash.join(', '))}</span>` : tagBadges(p)}</div>
+      <span class="by"><span class="av">${initial(giverName(p))}</span>${esc(giverName(p))}${p.mine ? ' (you)' : ''}</span>
+    </div>
+  </a>`;
+}
+const byEnding = (a, b) => a.until - b.until;
+
+function viewHome(app) {
+  const active = DB.posts().filter(isActive).sort(byEnding);
+  const loc = DB.profile().building;
+  app.innerHTML = `
+    ${loc ? `<p class="loc" style="margin:4px 4px 0">${svg('pin', 14)} ${esc(loc)}</p>` : ''}
+    <section class="hero">
+      <h1>Good food shouldn't go to waste.</h1>
+      <p>Share what you have. Find what you need. Help your neighborhood.</p>
+      <div class="ctas">
+        <a class="btn" href="#/discover">Find food nearby</a>
+        <a class="btn ghost" href="#/share">Share extra food</a>
+      </div>
+      <svg class="art" viewBox="0 0 110 130" fill="none" stroke="#2E6B3F" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M60 125V40"/><path d="M60 80c-14-2-24-12-26-28 16 1 26 12 26 28z"/><path d="M60 62c14-2 24-12 26-28-16 1-26 12-26 28z"/><path d="M60 42c-8-4-12-12-10-24 9 4 12 13 10 24z"/></svg>
+    </section>
+
+    <div class="sechead"><h2>Available now <span class="muted" style="font-weight:500">(${active.length})</span></h2><a href="#/discover">See all</a></div>
+    <div class="list three">${active.slice(0, 3).map(foodCard).join('') || `<div class="empty">No food right now. Be the first to share!</div>`}</div>
+
+    <div class="sechead"><h2>How it works</h2></div>
+    <div class="steps">
+      <div class="step"><i>1</i><div><b>Post it</b><div class="muted" style="font-size:14px">Add what you have, where, and until when.</div></div></div>
+      <div class="step"><i>2</i><div><b>Neighbors claim</b><div class="muted" style="font-size:14px">They reserve the portions they need.</div></div></div>
+      <div class="step"><i>3</i><div><b>Pick up</b><div class="muted" style="font-size:14px">Collected from a shared spot. Nothing wasted.</div></div></div>
+    </div>
+
+    <div class="alertcard">
+      ${svg('bell', 26, 'style="color:#CFE3BF;flex-shrink:0"')}
+      <div><b>Alerts for new food</b><small>Coming in the next version, so you never miss a post.</small></div>
+    </div>`;
+}
+
+function viewDiscover(app) {
+  let filter = 'All', query = '';
+  app.innerHTML = `
+    <div class="pagehead"><h1>Discover</h1><p>Free food shared by your neighbors.</p></div>
+    <label class="search">${svg('discover', 18, 'style="color:var(--soft)"')}<span class="sr">Search food</span><input id="q" type="search" placeholder="Search food or place..." autocomplete="off"></label>
+    <div class="chips scroll" id="chips" style="margin-top:12px" role="group" aria-label="Filter by type"></div>
+    <div class="list three" id="list" style="margin-top:12px"></div>`;
+  const chips = ['All', 'Meal', 'Fruit & veg', 'Baked', 'Other', 'Vegetarian', 'Vegan'];
+  const drawChips = () => {
+    $('#chips').innerHTML = chips.map((c) => `<button type="button" class="chip" aria-pressed="${c === filter}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
+  };
+  const drawList = () => {
+    const q = query.trim().toLowerCase();
+    const all = DB.posts();
+    const shown = all.filter(isActive).filter((p) => {
+      if (filter !== 'All' && p.category !== filter && !p.tags.includes(filter)) return false;
+      return !q || (p.name + ' ' + p.spot + ' ' + p.note).toLowerCase().includes(q);
+    }).sort(byEnding);
+    $('#list').innerHTML = shown.map(foodCard).join('') ||
+      `<div class="empty">Nothing matches right now.<br><a href="#/share" style="font-weight:700">Share something yourself</a></div>`;
+  };
+  $('#chips').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-c]'); if (!b) return;
+    filter = b.dataset.c; drawChips(); drawList();
+  });
+  $('#q').addEventListener('input', (e) => { query = e.target.value; drawList(); });
+  drawChips(); drawList();
+}
+
+function viewFood(app, id) {
+  const p = DB.post(id);
+  if (!p) { app.innerHTML = `<div class="empty" style="margin-top:24px">This food post no longer exists.<br><a href="#/discover" style="font-weight:700">Back to Discover</a></div>`; return; }
+  const c = CATEGORIES[p.category] || CATEGORIES.Other;
+  const warns = p.tags.filter((t) => WARN_TAGS.includes(t));
+  const diets = p.tags.filter((t) => !WARN_TAGS.includes(t));
+  const clash = allergyClash(p);
+  const active = isActive(p);
+  let n = Math.min(1, p.left);
+  const waText = `Free food on Neighborly: ${p.name} (${p.left} ${p.unit}) at ${p.spot}, until ${fmtWhen(p.until)}.`;
+
+  let action;
+  if (p.mine) {
+    action = `
+      <div class="panel">
+        <b>This is your post</b>
+        <div class="bar" aria-label="${p.total - p.left} of ${p.total} claimed"><span style="width:${(p.total - p.left) / p.total * 100}%"></span></div>
+        <span class="muted" style="font-size:14px">${p.total - p.left} of ${p.total} ${esc(p.unit)} claimed</span>
+        <div class="stack2" style="display:grid;gap:10px">
+          ${active ? `<button class="btn dark sm" id="gone">Mark all gone</button>` : ''}
+          <button class="btn danger sm" id="del">Delete post</button>
+        </div>
+      </div>`;
+  } else if (active) {
+    action = `
+      <div class="claimrow">
+        <b>How many ${esc(p.unit)}?</b>
+        <div class="stepper">
+          <button type="button" id="less" aria-label="Fewer">−</button>
+          <output id="n" aria-live="polite">${n}</output>
+          <button type="button" id="more" aria-label="More">+</button>
+        </div>
+      </div>
+      <button class="btn" id="claim" style="width:100%">Claim this food</button>`;
+  } else {
+    action = `<button class="btn" disabled style="width:100%">${p.left <= 0 ? 'All gone' : 'Expired'}</button>`;
+  }
+
+  app.innerHTML = `
+    <div class="detail">
+      <div class="photo" style="background:${c.color}">
+        ${p.photo ? `<img src="${p.photo}" alt="Photo of ${esc(p.name)}">` : svg(p.category, 96, 'style="opacity:.45"')}
+        <a class="back" href="#/discover" aria-label="Back to Discover">${svg('back', 20)}</a>
+        ${timeBadge(p)}
+      </div>
+      <div class="info">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+          <h1>${esc(p.name)}</h1><span class="badge" style="height:28px;font-size:13px">Free</span>
+        </div>
+        ${clash.length ? `<div class="warnbox" style="background:var(--warn);color:#fff">${svg('warn', 20, 'style="color:#fff;flex-shrink:0"')}<div><b>Contains ${esc(clash.join(', '))}</b>, which you marked as an allergy.</div></div>` : ''}
+        <div class="facts">
+          <div class="fact">${svg('pot')}<span><b>${p.left}</b> of ${p.total} ${esc(p.unit)} available</span></div>
+          <div class="fact">${svg('pin')}<span>${esc(p.spot)}</span></div>
+          <div class="fact">${svg('clock')}<span>Pick up before ${fmtWhen(p.until)}</span></div>
+          <div class="fact">${svg('cal')}<span>${p.category === 'Fruit & veg' ? 'Picked' : 'Made'} ${fmtWhen(p.cookedAt)}</span></div>
+        </div>
+        ${diets.length ? `<div class="tags">${diets.map((t) => `<span class="badge">${esc(t)}</span>`).join('')}</div>` : ''}
+        ${warns.length ? `<div class="warnbox">${svg('warn', 20)}<div><b>Contains ${esc(warns.join(', '))}.</b> Home food, so ask the giver if you have allergies.</div></div>` : ''}
+        ${p.note ? `<div><h2 style="font-size:16px;margin-bottom:6px">About this food</h2><p style="margin:0;color:#3F4D3B">${esc(p.note)}</p></div>` : ''}
+        <div><h2 style="font-size:16px;margin-bottom:8px">Shared by</h2>
+          <div class="person"><span class="av">${initial(giverName(p))}</span><div><b>${esc(giverName(p))}</b><div class="muted" style="font-size:13px">Shared ${fmtWhen(p.createdAt)}</div></div></div>
+        </div>
+        ${action}
+        ${active ? `<a href="https://wa.me/?text=${encodeURIComponent(waText + ' ' + location.href)}" target="_blank" rel="noopener" style="text-align:center;font-weight:700;font-size:14px;padding:6px 0 10px;display:flex;align-items:center;justify-content:center;gap:6px">${svg('wa', 18)} Also tell your WhatsApp group</a>` : ''}
+      </div>
+    </div>`;
+
+  if (p.mine) {
+    $('#gone')?.addEventListener('click', () => { DB.updatePost(p.id, { left: 0 }); toast('Marked as all gone. Thank you!'); render(); });
+    $('#del').addEventListener('click', () => {
+      if (confirm('Delete this post?')) { DB.deletePost(p.id); toast('Post deleted'); location.hash = '#/claims'; }
+    });
+  } else if (active) {
+    const out = $('#n');
+    $('#less').addEventListener('click', () => { n = Math.max(1, n - 1); out.textContent = n; });
+    $('#more').addEventListener('click', () => { n = Math.min(p.left, n + 1); out.textContent = n; });
+    $('#claim').addEventListener('click', () => {
+      const claim = DB.makeClaim(p.id, n);
+      if (!claim) { toast('Sorry, not enough left.'); render(); return; }
+      location.hash = '#/claimed/' + claim.id;
+    });
+  }
+}
+
+function viewClaimed(app, id) {
+  const c = DB.claim(id), p = c && DB.post(c.postId);
+  if (!c || !p) { location.hash = '#/claims'; return; }
+  app.innerHTML = `
+    <div class="narrow done">
+      <svg width="150" height="140" viewBox="0 0 150 140" fill="none" stroke="#2E6B3F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M40 60h70l-8 66H48z" fill="#E6EEDB"/><path d="M58 60c0-14 8-24 17-24s17 10 17 24"/><path d="M62 92l9 9 18-20"/><path d="M24 30l4 4M126 30l-4 4M18 70h6M126 70h6"/></svg>
+      <h1>Food claimed!</h1>
+      <p class="muted" style="margin:6px 0 0;font-size:17px">${c.portions} ${esc(p.unit)} of ${esc(p.name.toLowerCase())} saved for you.</p>
+      <div class="panel" style="margin-top:22px;text-align:left">
+        <h2 style="font-size:16px">Pickup</h2>
+        <div class="fact">${svg('pin')}<span>${esc(p.spot)}</span></div>
+        <div class="fact">${svg('clock')}<span>Before ${fmtWhen(p.until)}</span></div>
+        ${p.note ? `<div style="border-top:1px solid #ECE8DC;padding-top:12px"><div class="muted" style="font-size:13px;font-weight:700">Note from ${esc(giverName(p))}</div><p style="margin:4px 0 0;font-style:italic">"${esc(p.note)}"</p></div>` : ''}
+      </div>
+      <div style="display:grid;gap:10px;margin-top:20px">
+        <a class="btn" href="#/claims">View my claims</a>
+        <a class="btn ghost" href="#/home">Back to home</a>
+        <button class="linkbtn" id="giveback">Can't make it? Give it back</button>
+      </div>
+    </div>`;
+  $('#giveback').addEventListener('click', () => {
+    DB.setClaimStatus(c.id, 'returned'); toast('Given back. Someone else can take it now.'); location.hash = '#/discover';
+  });
+}
+
+function viewShare(app) {
+  const prof = DB.profile();
+  const chosen = new Set();
+  let photo = null, hours = 3;
+  const nowLocal = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
+  const untilOpts = [[1, '1 hour'], [3, '3 hours'], [6, '6 hours'], [24, 'Tomorrow']];
+
+  app.innerHTML = `
+    <div class="narrow">
+      <div class="pagehead"><h1>Share your extra food</h1><p>Help your neighbors and reduce food waste.</p></div>
+      <form class="form" id="f" novalidate>
+        <label class="photopick" id="pp">${svg('camera', 28, 'style="color:var(--green)"')}<span>Add photo (optional)</span>
+          <input type="file" accept="image/*" id="photo" aria-label="Add photo">
+        </label>
+        <div class="field" id="f-name"><label for="name">Food name</label><input id="name" maxlength="60" placeholder="e.g. Vegetable biryani"></div>
+        <div class="two">
+          <div class="field"><label for="cat">Category</label>
+            <select id="cat">${Object.keys(CATEGORIES).map((c) => `<option>${esc(c)}</option>`).join('')}</select></div>
+          <div class="field" id="f-qty"><label for="qty">How much?</label>
+            <div class="qty"><input id="qty" type="number" min="1" max="99" value="4" inputmode="numeric">
+              <select id="unit" aria-label="Unit"><option>portions</option><option>pieces</option><option>slices</option><option>bags</option><option>boxes</option><option>heads</option></select></div></div>
+        </div>
+        <div class="field"><label for="made">Made / picked at</label><input id="made" type="datetime-local" value="${nowLocal()}"></div>
+        <fieldset class="field"><legend>Available for</legend>
+          <div class="chips" id="until">${untilOpts.map(([h, l]) => `<button type="button" class="chip" data-h="${h}" aria-pressed="${h === hours}">${l}</button>`).join('')}</div></fieldset>
+        <div class="field" id="f-spot"><label for="spot">Pickup spot</label><input id="spot" maxlength="80" placeholder="e.g. Building B, table by the mailboxes" value="${esc(prof.building ? prof.building + ', ' : '')}">
+          <small>Use a shared spot like a lobby or bench, not your flat number.</small></div>
+        <fieldset class="field"><legend>Diet &amp; allergens</legend>
+          <div class="chips" id="tags">
+            ${DIET_TAGS.map((t) => `<button type="button" class="chip diet" data-t="${t}" aria-pressed="false">${t}</button>`).join('')}
+            ${WARN_TAGS.map((t) => `<button type="button" class="chip warn" data-t="${t}" aria-pressed="false">Contains ${t.toLowerCase()}</button>`).join('')}
+          </div></fieldset>
+        <div class="field"><label for="note">Note for neighbors (optional)</label><textarea id="note" maxlength="200" placeholder="e.g. Bring your own box. It's in the blue bag."></textarea></div>
+        ${prof.name ? '' : `<div class="field" id="f-who"><label for="who">Your first name</label><input id="who" maxlength="30" placeholder="So neighbors know who shared it"></div>`}
+        <p class="err" id="err" role="alert" hidden></p>
+        <button class="btn" type="submit">Share food</button>
+      </form>
+    </div>`;
+
+  $('#until').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-h]'); if (!b) return;
+    hours = Number(b.dataset.h);
+    $$('#until .chip').forEach((x) => x.setAttribute('aria-pressed', x === b));
+  });
+  $('#tags').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-t]'); if (!b) return;
+    const t = b.dataset.t, on = !chosen.has(t);
+    on ? chosen.add(t) : chosen.delete(t);
+    b.setAttribute('aria-pressed', on);
+  });
+  $('#photo').addEventListener('change', async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    try {
+      photo = await readPhoto(file);
+      const pp = $('#pp'); pp.querySelector('img')?.remove();
+      pp.insertAdjacentHTML('afterbegin', `<img src="${photo}" alt="Chosen photo">`);
+    } catch (err) { toast('That photo could not be read.'); }
+  });
+  $('#f').addEventListener('submit', (e) => {
+    e.preventDefault();
+    $$('.field.bad').forEach((x) => x.classList.remove('bad'));
+    const name = $('#name').value.trim(), spot = $('#spot').value.trim().replace(/,\s*$/, '');
+    const total = parseInt($('#qty').value, 10);
+    const who = $('#who') ? $('#who').value.trim() : prof.name;
+    const problems = [];
+    if (!name) { problems.push('a food name'); $('#f-name').classList.add('bad'); }
+    if (!(total >= 1 && total <= 99)) { problems.push('an amount (1–99)'); $('#f-qty').classList.add('bad'); }
+    if (!spot) { problems.push('a pickup spot'); $('#f-spot').classList.add('bad'); }
+    if (!who) { problems.push('your first name'); $('#f-who').classList.add('bad'); }
+    const err = $('#err');
+    if (problems.length) { err.textContent = 'Please add ' + problems.join(', ') + '.'; err.hidden = false; $('.field.bad input')?.focus(); return; }
+    if (!prof.name && who) DB.setProfile({ name: who });
+    const made = new Date($('#made').value).getTime();
+    const until = hours === 24
+      ? (() => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(12, 0, 0, 0); return d.getTime(); })()
+      : Date.now() + hours * HOUR;
+    const post = DB.addPost({
+      name, category: $('#cat').value, total, unit: $('#unit').value,
+      cookedAt: isNaN(made) ? Date.now() : made, until, spot,
+      note: $('#note').value.trim(), tags: [...DIET_TAGS, ...WARN_TAGS].filter((t) => chosen.has(t)),
+      by: who, photo
+    });
+    if (!post) return;
+    toast('Your food is live! Neighbors can see it now.');
+    location.hash = '#/food/' + post.id;
+  });
+}
+
+function viewClaims(app) {
+  let tab = sessionStorageGet('claimsTab') || 'current';
+  app.innerHTML = `
+    <div class="pagehead"><h1>My claims</h1><p>Food you've reserved and food you've shared.</p></div>
+    <div class="seg" role="tablist">
+      <button role="tab" data-tab="current">Current</button>
+      <button role="tab" data-tab="shares">My shares</button>
+      <button role="tab" data-tab="past">Past</button>
+    </div>
+    <div class="list" id="items" style="margin-top:14px"></div>`;
+
+  const claimItem = (c) => {
+    const p = DB.post(c.postId); if (!p) return '';
+    const label = { ready: ['Ready to pick up', ''], picked: ['Picked up', 'grey'], returned: ['Given back', 'grey'] }[c.status];
+    const live = c.status === 'ready' && p.until > Date.now();
+    return `<div class="item">
+      <a class="top" href="#/food/${p.id}">${tile(p, 64)}<div style="flex:1;min-width:0"><b>${esc(p.name)} · ${c.portions}</b>
+        <div class="muted" style="font-size:13px">${esc(p.spot)}</div>
+        <span class="badge ${label[1]}" style="margin-top:6px">${c.status === 'ready' && !live ? 'Pickup time passed' : label[0]}</span></div></a>
+      ${c.status === 'ready' ? `<div class="acts"><button class="btn dark sm" data-picked="${c.id}">Picked up</button><button class="btn danger sm" data-return="${c.id}">Give back</button></div>` : ''}
+    </div>`;
+  };
+  const shareItem = (p) => `<div class="item">
+      <a class="top" href="#/food/${p.id}">${tile(p, 64)}<div style="flex:1;min-width:0"><b>${esc(p.name)}</b>
+        <div class="muted" style="font-size:13px">${p.total - p.left} of ${p.total} ${esc(p.unit)} claimed</div>
+        <div style="margin-top:6px">${timeBadge(p)}</div></div></a>
+      ${isActive(p) ? `<div class="bar"><span style="width:${(p.total - p.left) / p.total * 100}%"></span></div>
+      <div class="acts"><button class="btn dark sm" data-gone="${p.id}">Mark all gone</button><a class="btn ghost sm" href="#/food/${p.id}">View post</a></div>` : ''}
+    </div>`;
+
+  const draw = () => {
+    $$('.seg button').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === tab));
+    const claims = DB.claims(), mine = DB.posts().filter((p) => p.mine);
+    let html = '';
+    if (tab === 'current') html = claims.filter((c) => c.status === 'ready').map(claimItem).join('') ||
+      `<div class="empty">No claims yet.<br><a href="#/discover" style="font-weight:700">Find food nearby</a></div>`;
+    if (tab === 'shares') html = mine.filter(isActive).map(shareItem).join('') ||
+      `<div class="empty">You're not sharing anything right now.<br><a href="#/share" style="font-weight:700">Share extra food</a></div>`;
+    if (tab === 'past') html = [...claims.filter((c) => c.status !== 'ready').map(claimItem), ...mine.filter((p) => !isActive(p)).map(shareItem)].join('') ||
+      `<div class="empty">Nothing here yet.</div>`;
+    $('#items').innerHTML = html;
+  };
+  app.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-tab]');
+    if (t) { tab = t.dataset.tab; sessionStorageSet('claimsTab', tab); draw(); return; }
+    const pk = e.target.closest('[data-picked]'); if (pk) { DB.setClaimStatus(pk.dataset.picked, 'picked'); toast('Enjoy your food!'); draw(); return; }
+    const rt = e.target.closest('[data-return]'); if (rt) { DB.setClaimStatus(rt.dataset.return, 'returned'); toast('Given back. Someone else can take it.'); draw(); return; }
+    const gn = e.target.closest('[data-gone]'); if (gn) { DB.updatePost(gn.dataset.gone, { left: 0 }); toast('Marked as all gone. Thank you!'); draw(); }
+  });
+  draw();
+}
+function sessionStorageGet(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+function sessionStorageSet(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
+
+function viewProfile(app) {
+  const prof = DB.profile();
+  const mine = DB.posts().filter((p) => p.mine);
+  const claims = DB.claims().filter((c) => c.status !== 'returned');
+  const sharedPortions = mine.reduce((s, p) => s + (p.total - p.left), 0);
+  const claimedPortions = claims.reduce((s, c) => s + c.portions, 0);
+  app.innerHTML = `
+    <div class="narrow">
+      <div class="profilehead">
+        <span class="av" id="av">${initial(prof.name || 'You')}</span>
+        <div style="flex:1">
+          <h1 class="serif" style="font-size:28px">${esc(prof.name || 'Your profile')}</h1>
+          <div class="muted" style="font-size:14px">${esc(prof.building || 'Add your building below')}</div>
+        </div>
+      </div>
+      <section class="impact">
+        <h2 style="font-size:16px;color:var(--green-dk)">Your impact</h2>
+        <div class="stats">
+          <div><b>${mine.length}</b><span>foods shared</span></div>
+          <div><b>${claims.length}</b><span>foods claimed</span></div>
+          <div><b>${sharedPortions + claimedPortions}</b><span>portions saved from the bin</span></div>
+        </div>
+      </section>
+      <form class="form" id="pf">
+        <div class="field"><label for="pname">First name</label><input id="pname" maxlength="30" value="${esc(prof.name)}" placeholder="Shown on food you share"></div>
+        <div class="field"><label for="pbld">Building or street</label><input id="pbld" maxlength="50" value="${esc(prof.building)}" placeholder="e.g. Building B"></div>
+        <fieldset class="field"><legend>My allergies</legend>
+          <small style="margin-bottom:8px">We'll warn you on food that contains these.</small>
+          <div class="chips" id="alg">${WARN_TAGS.map((t) => `<button type="button" class="chip warn" data-t="${t}" aria-pressed="${(prof.allergies || []).includes(t)}">${t}</button>`).join('')}</div>
+        </fieldset>
+        <button class="btn" type="submit">Save profile</button>
+      </form>
+      <div class="alertcard">${svg('bell', 26, 'style="color:#CFE3BF;flex-shrink:0"')}<div><b>Alerts for new food</b><small>Coming in the next version.</small></div></div>
+      <div class="panel" style="margin-top:16px">
+        <b>About this version</b>
+        <p class="muted" style="margin:0;font-size:14px">This is version 1. Posts are saved on this device only, and the sample posts show how the app works. Version 2 will connect a shared database so all neighbors see the same feed.</p>
+        <button class="btn danger sm" id="reset" type="button">Reset demo data</button>
+      </div>
+    </div>`;
+  const allergies = new Set(prof.allergies || []);
+  $('#alg').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-t]'); if (!b) return;
+    const t = b.dataset.t; allergies.has(t) ? allergies.delete(t) : allergies.add(t);
+    b.setAttribute('aria-pressed', allergies.has(t));
+  });
+  $('#pf').addEventListener('submit', (e) => {
+    e.preventDefault();
+    DB.setProfile({ name: $('#pname').value.trim(), building: $('#pbld').value.trim(), allergies: [...allergies] });
+    toast('Profile saved'); render();
+  });
+  $('#reset').addEventListener('click', () => {
+    if (confirm('Reset everything back to the sample posts?')) { DB.reset(); toast('Demo data reset'); location.hash = '#/home'; render(); }
+  });
+}
+
+$('#bell').addEventListener('click', () => toast('Alerts are coming in the next version.'));
+render();
+</script>
+</body>
+</html>
