@@ -4,7 +4,7 @@ Akshit · Matriculation no. 21411674
 
 ## Entry: Neighbor food sharing (version 1)
 
-**Date:** [add date]
+**Date:** 04/10/2026
 **Brief I drew:** *Neighbor food sharing.* "Someone with surplus food from a party or garden needs to give it away before it spoils, while there's no quick way to tell nearby neighbors it's available."
 
 ### What I built
