@@ -9,7 +9,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%232E6B3F' d='M20 4C11 4 5 8.5 5 15c0 1.6.4 3 1 4.2C7.5 14 11 10.5 15 9c-3.4 2.2-6 5.4-7.4 10.4.9.4 2 .6 3.1.6C17 20 20 13 20 4z'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&family=Anton&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#F4F1E8; --card:#FFFFFF; --ink:#1E2B20; --muted:#55624F; --soft:#6B7566;
@@ -38,7 +38,7 @@ img{max-width:100%;display:block}
 .topnav{display:none;gap:4px;margin-left:auto}
 .topnav a{padding:10px 14px;border-radius:999px;text-decoration:none;color:var(--ink);font-weight:500;font-size:15px}
 .topnav a.on{background:var(--green-lt);color:var(--green-dk);font-weight:700}
-.iconbtn{width:44px;height:44px;border-radius:14px;border:none;background:transparent;display:flex;align-items:center;justify-content:center;margin-left:auto;position:relative}
+.iconbtn{width:44px;height:44px;border-radius:14px;border:none;background:transparent;display:flex;align-items:center;justify-content:center;position:relative}
 .dot{position:absolute;top:10px;right:11px;width:8px;height:8px;border-radius:9px;background:#D2691E}
 
 /* ---------- bottom tabs (phone) ---------- */
@@ -76,11 +76,47 @@ h1,h2,h3{margin:0}
 .tags{display:flex;flex-wrap:wrap;gap:5px}
 
 /* ---------- home ---------- */
-.hero{margin-top:12px;padding:26px 22px;border-radius:26px;background:var(--green-lt);position:relative;overflow:hidden}
-.hero h1{font-family:var(--serif);font-size:clamp(32px,6vw,52px);line-height:1.04;color:var(--green-dk);max-width:12ch}
-.hero p{margin:12px 0 0;color:#3F4D3B;max-width:34ch}
-.hero .art{position:absolute;right:-10px;top:14px;width:90px;opacity:.35;pointer-events:none}
-.hero .ctas{display:flex;flex-direction:column;gap:10px;margin-top:20px;position:relative}
+.hero3d{--deep:#12301F;--glow:#F0912F;--cream:#F4F1E8;--ease:cubic-bezier(.2,.8,.2,1);
+  position:relative;isolation:isolate;overflow:hidden;color:var(--cream);
+  width:100vw;margin-left:calc(50% - 50vw);              /* full width, even though <main> is narrower */
+  min-height:calc(100svh - 150px);display:flex;align-items:flex-end;
+  background:radial-gradient(120% 90% at 75% 40%,#2a6a45 0%,#1E4A2A 38%,#12301F 100%)}
+.hero3d canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0;touch-action:pan-y;opacity:0;transition:opacity .9s var(--ease)}
+.hero3d.ready canvas{opacity:1}
+.hero3d::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(0deg,rgba(18,48,31,.94) 0%,rgba(18,48,31,.78) 42%,rgba(18,48,31,0) 74%)}
+.hero3d .inner{position:relative;z-index:2;width:100%;max-width:1120px;margin:0 auto;padding:96px 16px 40px}
+.hero3d .eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:18px;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#CFE3BF;opacity:0;animation:heroFade .8s var(--ease) .05s forwards}
+.hero3d .eyebrow i{width:8px;height:8px;border-radius:50%;background:var(--glow);box-shadow:0 0 12px var(--glow)}
+.hero3d .headline{margin:0;font-family:'Anton','Oswald','Arial Narrow',Impact,sans-serif;font-weight:400;text-transform:uppercase;line-height:.94;letter-spacing:.005em;font-size:clamp(52px,8.8vw,128px)}
+.hero3d .headline .ln{display:block;overflow:hidden;padding-bottom:.05em}
+.hero3d .headline .ln>span{display:block;transform:translateY(112%);animation:heroRise .9s var(--ease) forwards;animation-delay:calc(.15s + var(--i)*.14s)}
+.hero3d .headline .accent{color:var(--glow)}
+@keyframes heroRise{to{transform:none}}
+@keyframes heroFade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.hero3d .lede{max-width:34ch;margin:22px 0 0;font-size:clamp(16px,2.2vw,20px);color:#E6EEDB;opacity:0;animation:heroFade .8s var(--ease) .75s forwards}
+.hero3d .ctas{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin-top:28px;opacity:0;animation:heroFade .8s var(--ease) .9s forwards}
+.hero3d .btn{transition:transform .35s var(--ease),box-shadow .35s var(--ease),background-color .35s var(--ease)}
+.hero3d .btn.primary{background:var(--cream);border-color:var(--cream);color:var(--green-dk)}
+.hero3d .btn.ghost{background:transparent;border-color:rgba(244,241,232,.6);color:var(--cream)}
+.hero3d .btn:hover,.hero3d .btn:focus-visible{transform:translateY(-3px)}
+.hero3d .btn.primary:hover{background:var(--cream);border-color:var(--cream);box-shadow:0 12px 26px rgba(0,0,0,.3)}
+.hero3d .btn.ghost:hover{background:rgba(244,241,232,.12)}
+.hero3d .ulink{color:var(--cream);text-decoration:none;font-weight:700;padding:6px 0;background:linear-gradient(currentColor,currentColor) 0 100%/0 2px no-repeat;transition:background-size .4s var(--ease)}
+.hero3d .ulink:hover,.hero3d .ulink:focus-visible{background-size:100% 2px}
+.hero3d :focus-visible{outline-color:#9CC7A5}
+/* no WebGL, reduced motion or data saver: a static glow instead of the 3D scene */
+.hero3d.no-webgl canvas{display:none}
+.hero3d.no-webgl::before{content:"";position:absolute;z-index:0;right:50%;transform:translateX(50%);top:6%;width:52vmin;height:52vmin;border-radius:50%;
+  background:radial-gradient(circle,rgba(240,145,47,.85) 0%,rgba(240,145,47,.25) 42%,transparent 70%)}
+#how{scroll-margin-top:72px}
+body{overflow-x:hidden}
+@media (prefers-reduced-motion:reduce){
+  .hero3d .headline .ln>span{transform:none;animation:none}
+  .hero3d .eyebrow,.hero3d .lede,.hero3d .ctas{opacity:1;animation:none}
+  .hero3d .btn,.hero3d .ulink,.hero3d canvas{transition:none}
+  .hero3d .btn:hover{transform:none}
+}
 .steps{display:grid;gap:10px;margin-top:16px}
 .step{background:#fff;border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center}
 .step i{font-style:normal;width:34px;height:34px;flex-shrink:0;border-radius:99px;background:var(--green-md);color:var(--green-dk);font-weight:700;display:flex;align-items:center;justify-content:center}
@@ -172,6 +208,35 @@ fieldset legend{margin-bottom:8px}
 .done{text-align:center;padding-top:16px}
 .done h1{font-family:var(--serif);font-size:34px;color:var(--green-dk);margin-top:10px}
 
+/* ---------- accounts and buildings ---------- */
+.topauth{margin-left:auto;display:flex;align-items:center;gap:8px}
+.topauth .btn{min-height:40px;font-size:14px;padding:0 16px}
+.hide-sm{display:none}
+.iconbtn.soon{opacity:.45}
+.avchip{width:40px;height:40px;border-radius:99px;background:var(--green-md);color:var(--green-dk);font-weight:700;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.note{margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--green-lt);color:var(--green-dk);font-size:14px}
+.note.demo{background:#FFF3D6;color:#6B4E00}
+.note a{color:inherit}
+.pw{position:relative;display:flex}
+.pw input{padding-right:84px}
+.pwtoggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);min-height:40px;padding:0 12px;border:none;background:transparent;color:var(--green);font-weight:700;border-radius:10px}
+.strength{height:6px;border-radius:99px;background:#EEF2E8;overflow:hidden}
+.strength span{display:block;height:100%;width:0;border-radius:99px;transition:width .3s cubic-bezier(.2,.8,.2,1),background-color .3s}
+.rules .check{display:flex;gap:12px;align-items:flex-start;font-size:14px;cursor:pointer}
+.rules .check input{width:22px;height:22px;flex-shrink:0;margin:2px 0 0;accent-color:var(--green)}
+.rules.bad .check{color:var(--warn);font-weight:700}
+.field.bad legend{color:var(--warn)}
+.field.bad .chips .chip{border-color:var(--warn-line)}
+.center{text-align:center}
+.codebox{font-size:clamp(28px,9vw,42px);letter-spacing:.14em;font-weight:700;color:var(--green-dk);background:var(--green-lt);border-radius:18px;padding:18px;text-align:center;user-select:all;word-break:break-all}
+.members{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.members li{display:flex;align-items:center;gap:10px}
+.linkbtn.inline{display:inline;min-height:0;padding:0;color:var(--green);text-decoration:underline}
+details summary{list-style:revert}
+.toastbtn{background:none;border:none;color:#CFE3BF;font-weight:700;text-decoration:underline;min-height:44px;padding:0 8px}
+#toast.act{pointer-events:auto}
+main:focus{outline:none}
+
 /* ---------- toast ---------- */
 #toast{position:fixed;left:50%;bottom:100px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:14px;font-weight:500;font-size:15px;opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:calc(100% - 32px);text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
@@ -179,19 +244,21 @@ fieldset legend{margin-bottom:8px}
 /* ---------- bigger screens ---------- */
 @media (min-width:700px){
   .list{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .hero .ctas{flex-direction:row}
   .steps{grid-template-columns:repeat(3,minmax(0,1fr))}
   .stack2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 }
 @media (min-width:900px){
+  .hero3d{min-height:min(86svh,780px)}
+  .hero3d::after{background:linear-gradient(90deg,rgba(18,48,31,.78) 0%,rgba(18,48,31,.25) 45%,rgba(18,48,31,0) 62%)}
+  .hero3d .inner{padding:96px 16px 56px}
+  .hero3d.no-webgl::before{right:8%;transform:none;top:14%;width:46vmin;height:46vmin}
   body{padding-bottom:0}
   .tabbar{display:none}
   .topnav{display:flex}
   .topbar{border-bottom-color:var(--line)}
   #toast{bottom:32px}
-  .hero{padding:48px 44px;margin-top:24px}
-  .hero .art{width:220px;right:40px;top:auto;bottom:0;opacity:.6}
-  .topnav + .iconbtn{margin-left:0}
+  .topauth{margin-left:0}
+  .hide-sm{display:inline-flex}
   .detail{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:36px;margin:24px 0 0;align-items:start}
   .photo{height:460px;border-radius:26px;position:sticky;top:90px}
   .photo .badge{bottom:16px}
@@ -212,7 +279,8 @@ fieldset legend{margin-bottom:8px}
       <b>Neighborly</b>
     </a>
     <nav class="topnav" aria-label="Main" id="topnav"></nav>
-    <button class="iconbtn" type="button" id="bell" aria-label="Alerts (coming soon)">
+    <div class="topauth" id="topauth"></div>
+    <button class="iconbtn soon" type="button" id="bell" aria-label="Alerts (coming soon)" title="Alerts are coming in a later version">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>
     </button>
   </div>
@@ -227,118 +295,307 @@ fieldset legend{margin-bottom:8px}
 'use strict';
 
 /* =====================================================================
-   DATA LAYER
-   ---------------------------------------------------------------------
-   Version 1 keeps everything in this browser (localStorage), so posts
-   are only visible on this device.
-   Version 2 plan: replace the functions inside `DB` with Firebase calls.
-   Nothing else in the app reads or writes storage directly, so the
-   screens below do not need to change.
-   ===================================================================== */
-const STORAGE_KEY = 'neighborly-v1';
-const HOUR = 3600e3, MIN = 60e3;
-
-const DB = (() => {
-  let state = null;
-
-  function seed() {
-    const now = Date.now();
-    const id = () => Math.random().toString(36).slice(2, 10);
-    const lena = id(), mia = id(), jonas = id(), emma = id(), pasta = id(), rolls = id();
-    return {
-      profile: { name: '', building: '', allergies: [] },
-      posts: [
-        { id: lena, name: 'Vegetable biryani', category: 'Meal', total: 6, left: 6, unit: 'portions',
-          cookedAt: now - 1 * HOUR, until: now + 2.5 * HOUR, spot: 'Building B, table by the mailboxes',
-          note: "Made too much for a party. It's covered with foil, please bring your own box!",
-          tags: ['Vegetarian', 'Nuts'], by: 'Lena', mine: false, photo: null, createdAt: now - 40 * MIN },
-        { id: mia, name: 'Birthday cake', category: 'Baked', total: 8, left: 5, unit: 'slices',
-          cookedAt: now - 20 * HOUR, until: now + 45 * MIN, spot: 'Building A, lobby fridge',
-          note: 'Chocolate cake from my daughter’s birthday. Plates are next to it.',
-          tags: ['Vegetarian', 'Dairy', 'Gluten', 'Egg'], by: 'Mia', mine: false, photo: null, createdAt: now - 3 * HOUR },
-        { id: jonas, name: 'Garden tomatoes', category: 'Fruit & veg', total: 4, left: 4, unit: 'bags',
-          cookedAt: now - 5 * HOUR, until: now + 22 * HOUR, spot: 'Courtyard bench',
-          note: 'Picked this morning from the balcony garden. About half a kilo per bag.',
-          tags: ['Vegan'], by: 'Jonas', mine: false, photo: null, createdAt: now - 2 * HOUR },
-        { id: emma, name: 'Fresh lettuce', category: 'Fruit & veg', total: 3, left: 2, unit: 'heads',
-          cookedAt: now - 6 * HOUR, until: now + 7 * HOUR, spot: 'Building C, entrance shelf',
-          note: 'Too much from the market box this week.',
-          tags: ['Vegan'], by: 'Emma', mine: false, photo: null, createdAt: now - 90 * MIN },
-        { id: pasta, name: 'Pasta salad', category: 'Meal', total: 5, left: 2, unit: 'portions',
-          cookedAt: now - 3 * HOUR, until: now + 4 * HOUR, spot: 'Building B, table by the mailboxes',
-          note: 'With olives and feta. Kept in the fridge until now.',
-          tags: ['Vegetarian', 'Dairy', 'Gluten'], by: 'You', mine: true, photo: null, createdAt: now - 2 * HOUR },
-        { id: rolls, name: 'Bread rolls', category: 'Baked', total: 10, left: 0, unit: 'pieces',
-          cookedAt: now - 30 * HOUR, until: now - 18 * HOUR, spot: 'Building A, lobby fridge',
-          note: '', tags: ['Vegan', 'Gluten'], by: 'Noah', mine: false, photo: null, createdAt: now - 28 * HOUR }
-      ],
-      claims: [
-        { id: id(), postId: rolls, portions: 2, at: now - 26 * HOUR, status: 'picked' }
-      ]
-    };
-  }
-
-  function load() {
-    try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { state = null; }
-    if (!state || !Array.isArray(state.posts)) { state = seed(); save(); }
-  }
-  function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); return true; }
-    catch (e) { toast('Could not save. Try a smaller photo.'); return false; }
-  }
-  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-
-  load();
-  return {
-    posts: () => state.posts.slice(),
-    post: (id) => state.posts.find((p) => p.id === id) || null,
-    addPost(data) {
-      const p = { ...data, id: newId(), left: data.total, mine: true, createdAt: Date.now() };
-      state.posts.unshift(p);
-      if (!save()) { state.posts.shift(); return null; }
-      return p;
-    },
-    updatePost(id, changes) {
-      const p = this.post(id); if (!p) return;
-      Object.assign(p, changes); save();
-    },
-    deletePost(id) {
-      state.posts = state.posts.filter((p) => p.id !== id);
-      state.claims = state.claims.filter((c) => c.postId !== id);
-      save();
-    },
-    claims: () => state.claims.slice(),
-    claim: (id) => state.claims.find((c) => c.id === id) || null,
-    makeClaim(postId, portions) {
-      const p = this.post(postId);
-      if (!p || p.left < portions) return null;
-      p.left -= portions;
-      const c = { id: newId(), postId, portions, at: Date.now(), status: 'ready' };
-      state.claims.unshift(c); save();
-      return c;
-    },
-    setClaimStatus(id, status) {
-      const c = this.claim(id); if (!c) return;
-      if (status === 'returned' && c.status === 'ready') {
-        const p = this.post(c.postId); if (p) p.left = Math.min(p.total, p.left + c.portions);
-      }
-      c.status = status; save();
-    },
-    profile: () => ({ ...state.profile }),
-    setProfile(changes) { Object.assign(state.profile, changes); save(); },
-    reset() { state = seed(); save(); }
-  };
-})();
-
-/* =====================================================================
-   HELPERS
+   HELPERS (small tools used everywhere)
    ===================================================================== */
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const HOUR = 3600e3, MIN = 60e3;
 
+let toastTimer;
+function toast(msg, action) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.toggle('act', !!action);
+  if (action) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'toastbtn'; b.textContent = action.label;
+    b.addEventListener('click', () => { el.classList.remove('show'); action.run(); });
+    el.append(' ', b);
+  }
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), action ? 7000 : 2800);
+}
+
+/* =====================================================================
+   DATA LAYER  (DEMO MODE)
+   ---------------------------------------------------------------------
+   Everything below the "SCREENS" heading only talks to `Auth` and `DB`.
+   Right now both keep their data in this browser (localStorage), so
+   accounts and posts exist on this device only. No real email is sent.
+
+   Version 2 plan: replace the functions inside `Auth` and `DB` with
+   Firebase calls (Authentication + Firestore) and set APP.demo = false.
+   The screens do not need to change.
+   ===================================================================== */
+const APP = { demo: true };
+const STORAGE_KEY = 'neighborly-v2';
+const DEMO_BUILDING = 'b-demo-b';
+
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const normEmail = (e) => String(e || '').trim().toLowerCase();
+const normCode = (c) => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const COMMON_PW = ['password', 'password1', '12345678', '123456789', '1234567890', 'qwertyui', 'qwertz123', '11111111', 'neighborly', 'passwort', 'iloveyou'];
+const DOMAIN_FIXES = { 'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gmail.con': 'gmail.com', 'gmail.co': 'gmail.com', 'gnail.com': 'gmail.com', 'hotmial.com': 'hotmail.com', 'hotmail.con': 'hotmail.com', 'yahooo.com': 'yahoo.com', 'yaho.com': 'yahoo.com', 'outlok.com': 'outlook.com', 'outlook.con': 'outlook.com', 'icloud.con': 'icloud.com' };
+function emailTypo(email) {
+  const [user, domain] = normEmail(email).split('@');
+  return domain && DOMAIN_FIXES[domain] ? user + '@' + DOMAIN_FIXES[domain] : '';
+}
+function pwProblem(pw) {
+  if (pw.length < 8) return 'Use at least 8 characters.';
+  if (COMMON_PW.includes(pw.toLowerCase())) return 'That password is too easy to guess.';
+  return '';
+}
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // no 0/O/1/I, so codes are easy to read out
+function makeCode() {
+  const bytes = new Uint8Array(8);
+  if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(bytes);
+  else bytes.forEach((_, i) => { bytes[i] = Math.floor(Math.random() * 256); });
+  const s = Array.from(bytes, (b) => CODE_CHARS[b % CODE_CHARS.length]).join('');
+  return s.slice(0, 4) + '-' + s.slice(4);
+}
+/* Demo only: passwords are salted and hashed, never stored as plain text.
+   Real security arrives with Firebase Authentication in version 2. */
+async function hashPassword(pw, salt) {
+  const data = salt + '::' + pw;
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data));
+    return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('');
+  } catch (e) {
+    let h = 5381; for (const ch of data) h = ((h << 5) + h + ch.charCodeAt(0)) | 0;
+    return 'x' + (h >>> 0).toString(16);
+  }
+}
+
+let state = null, persistOK = true;
+
+function seed() {
+  const now = Date.now();
+  const neighbor = (name, building) => ({ id: 'u-' + name.toLowerCase(), name, email: null, demo: true, verified: true, buildingId: building, allergies: [], createdAt: now - 30 * 24 * HOUR });
+  const post = (o) => ({ id: newId(), buildingId: DEMO_BUILDING, photo: null, gone: false, ...o });
+  return {
+    session: null,
+    users: [
+      neighbor('Lena', DEMO_BUILDING), neighbor('Mia', DEMO_BUILDING), neighbor('Jonas', DEMO_BUILDING),
+      neighbor('Emma', DEMO_BUILDING), neighbor('Noah', DEMO_BUILDING), neighbor('Sara', 'b-demo-a')
+    ],
+    buildings: [
+      { id: DEMO_BUILDING, name: 'Demo Building B', city: 'Berlin', postcode: '', code: 'DEMO-B', adminId: null,
+        spots: ['Table by the mailboxes', 'Lobby fridge', 'Courtyard bench', 'Entrance shelf'], createdAt: now },
+      { id: 'b-demo-a', name: 'Demo Building A', city: 'Berlin', postcode: '', code: 'DEMO-A', adminId: null,
+        spots: ['Lobby shelf'], createdAt: now }
+    ],
+    posts: [
+      post({ ownerId: 'u-lena', by: 'Lena', name: 'Vegetable biryani', category: 'Meal', total: 6, left: 6, unit: 'portions',
+        cookedAt: now - 1 * HOUR, until: now + 2.5 * HOUR, spot: 'Table by the mailboxes',
+        note: "Made too much for a party. It's covered with foil, please bring your own box!",
+        ingredients: 'Basmati rice, carrots, peas, cashews, onion, spices, vegetable oil',
+        tags: ['Vegetarian', 'Nuts'], createdAt: now - 40 * MIN }),
+      post({ ownerId: 'u-mia', by: 'Mia', name: 'Birthday cake', category: 'Baked', total: 8, left: 5, unit: 'slices',
+        cookedAt: now - 20 * HOUR, until: now + 45 * MIN, spot: 'Lobby fridge',
+        note: 'Chocolate cake from my daughter’s birthday. Plates are next to it.',
+        ingredients: 'Wheat flour, sugar, eggs, butter, milk, cocoa',
+        tags: ['Vegetarian', 'Dairy', 'Gluten', 'Egg'], createdAt: now - 3 * HOUR }),
+      post({ ownerId: 'u-jonas', by: 'Jonas', name: 'Garden tomatoes', category: 'Fruit & veg', total: 4, left: 4, unit: 'bags',
+        cookedAt: now - 5 * HOUR, until: now + 22 * HOUR, spot: 'Courtyard bench',
+        note: 'Picked this morning from the balcony garden. About half a kilo per bag.',
+        ingredients: 'Tomatoes (home-grown, unwashed)',
+        tags: ['Vegan'], createdAt: now - 2 * HOUR }),
+      post({ ownerId: 'u-emma', by: 'Emma', name: 'Fresh lettuce', category: 'Fruit & veg', total: 3, left: 2, unit: 'heads',
+        cookedAt: now - 6 * HOUR, until: now + 7 * HOUR, spot: 'Entrance shelf',
+        note: 'Too much from the market box this week.',
+        ingredients: 'Lettuce (unwashed)',
+        tags: ['Vegan'], createdAt: now - 90 * MIN }),
+      post({ ownerId: 'u-noah', by: 'Noah', name: 'Bread rolls', category: 'Baked', total: 10, left: 0, unit: 'pieces',
+        cookedAt: now - 30 * HOUR, until: now - 18 * HOUR, spot: 'Lobby fridge',
+        note: '', ingredients: 'Wheat flour, water, yeast, salt',
+        tags: ['Vegan', 'Gluten'], createdAt: now - 28 * HOUR }),
+      post({ buildingId: 'b-demo-a', ownerId: 'u-sara', by: 'Sara', name: 'Apple pie', category: 'Baked', total: 6, left: 6, unit: 'slices',
+        cookedAt: now - 2 * HOUR, until: now + 8 * HOUR, spot: 'Lobby shelf',
+        note: 'Still warm this afternoon.', ingredients: 'Apples, wheat flour, butter, sugar, eggs, cinnamon',
+        tags: ['Vegetarian', 'Dairy', 'Gluten', 'Egg'], createdAt: now - 2 * HOUR })
+    ],
+    claims: [],
+    reports: []
+  };
+}
+
+function loadState() {
+  let raw = null;
+  try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { persistOK = false; }
+  try { state = raw ? JSON.parse(raw) : null; } catch (e) { state = null; }
+  const ok = state && ['users', 'buildings', 'posts', 'claims'].every((k) => Array.isArray(state[k]));
+  if (!ok) { state = seed(); saveState(true); }
+  if (!Array.isArray(state.reports)) state.reports = [];
+  refreshDemoFood();
+}
+/* Keeps the demo feed alive: when the sample neighbors' food has all expired, bring in fresh sample posts.
+   Posts someone has claimed are kept so claim history stays intact. */
+function refreshDemoFood() {
+  const demoIds = new Set(state.users.filter((u) => u.demo).map((u) => u.id));
+  const mine = state.posts.filter((p) => demoIds.has(p.ownerId));
+  if (mine.filter((p) => p.until > Date.now() && !p.gone).length >= 2) return;
+  const claimed = new Set(state.claims.map((c) => c.postId));
+  state.posts = state.posts.filter((p) => !demoIds.has(p.ownerId) || claimed.has(p.id));
+  state.posts.push(...seed().posts);
+  saveState(true);
+}
+function saveState(quiet) {
+  if (!persistOK) return true;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); return true; }
+  catch (e) { if (!quiet) toast('Could not save. Try a smaller photo.'); return false; }
+}
+const save = () => saveState(false);
+
+/* removes everything a person owns in their building (used when they leave, are removed or delete the account) */
+function dropUserData(userId) {
+  const mine = state.posts.filter((p) => p.ownerId === userId).map((p) => p.id);
+  state.claims = state.claims.filter((c) => !mine.includes(c.postId));
+  state.posts = state.posts.filter((p) => p.ownerId !== userId);
+  state.claims.filter((c) => c.userId === userId && c.status === 'ready').forEach((c) => {
+    const p = state.posts.find((x) => x.id === c.postId);
+    if (p) p.left = Math.min(p.total, p.left + c.portions);
+  });
+  state.claims = state.claims.filter((c) => c.userId !== userId);
+}
+function detachFromBuilding(u) {
+  const bid = u.buildingId; if (!bid) return;
+  dropUserData(u.id);
+  u.buildingId = null;
+  const b = state.buildings.find((x) => x.id === bid);
+  if (b && b.adminId === u.id) {
+    const next = state.users.find((x) => x.buildingId === bid && x.id !== u.id);
+    if (next) b.adminId = next.id;
+    else {                                    // last member left: the building disappears
+      state.posts = state.posts.filter((p) => p.buildingId !== bid);
+      state.buildings = state.buildings.filter((x) => x.id !== bid);
+    }
+  }
+}
+
+const claimedPortions = (postId) => state.claims.filter((c) => c.postId === postId && c.status !== 'returned').reduce((s, c) => s + c.portions, 0);
+
+const Auth = {
+  current() { return state.session ? state.users.find((u) => u.id === state.session) || null : null; },
+  async signUp({ name, email, password }) {
+    email = normEmail(email);
+    if (state.users.some((u) => u.email === email)) return { error: 'exists' };
+    const salt = newId();
+    const user = { id: newId(), name: name.trim(), email, salt, hash: await hashPassword(password, salt),
+      verified: false, buildingId: null, allergies: [], createdAt: Date.now() };
+    state.users.push(user); state.session = user.id; save();
+    return { user };
+  },
+  async logIn(email, password) {
+    const u = state.users.find((x) => x.email && x.email === normEmail(email));
+    if (!u || !u.hash || (await hashPassword(password, u.salt)) !== u.hash) return { error: 'bad' };
+    state.session = u.id; save();
+    return { user: u };
+  },
+  logOut() { state.session = null; save(); },
+  sendVerification() { return true; },            // version 2: Firebase sendEmailVerification()
+  verifyEmail() { const u = this.current(); if (u) { u.verified = true; save(); } },   // demo only: the "click the link" step
+  async resetPassword(email, password) {          // version 2: Firebase sendPasswordResetEmail()
+    const u = state.users.find((x) => x.email && x.email === normEmail(email));
+    if (!u) return { error: 'none' };
+    u.salt = newId(); u.hash = await hashPassword(password, u.salt); save();
+    return { ok: true };
+  },
+  setProfile(changes) { const u = this.current(); if (u) { Object.assign(u, changes); save(); } },
+  joinBuilding(code) {
+    const u = this.current(); if (!u) return { error: 'login' };
+    const b = state.buildings.find((x) => normCode(x.code) === normCode(code));
+    if (!b) return { error: 'nocode' };
+    if (u.buildingId !== b.id) { detachFromBuilding(u); u.buildingId = b.id; save(); }
+    return { building: b };
+  },
+  createBuilding({ name, city, postcode, spots }) {
+    const u = this.current(); if (!u) return null;
+    detachFromBuilding(u);
+    let code; do { code = makeCode(); } while (state.buildings.some((b) => normCode(b.code) === normCode(code)));
+    const b = { id: newId(), name, city, postcode, code, adminId: u.id, spots, createdAt: Date.now() };
+    state.buildings.push(b); u.buildingId = b.id; save();
+    return b;
+  },
+  leaveBuilding() { const u = this.current(); if (u) { detachFromBuilding(u); save(); } },
+  deleteAccount() {
+    const u = this.current(); if (!u) return;
+    detachFromBuilding(u);
+    state.users = state.users.filter((x) => x.id !== u.id);
+    state.session = null; save();
+  }
+};
+
+const DB = {
+  user: (id) => state.users.find((u) => u.id === id) || null,
+  building: (id) => state.buildings.find((b) => b.id === id) || null,
+  members: (bid) => state.users.filter((u) => u.buildingId === bid),
+  regenerateCode(bid) {
+    const b = this.building(bid); if (!b) return null;
+    let code; do { code = makeCode(); } while (state.buildings.some((x) => normCode(x.code) === normCode(code)));
+    b.code = code; save(); return code;
+  },
+  setSpots(bid, spots) { const b = this.building(bid); if (b) { b.spots = spots; save(); } },
+  removeMember(adminId, userId) {
+    const u = this.user(userId), b = u && this.building(u.buildingId);
+    if (!u || !b || b.adminId !== adminId || userId === adminId) return false;
+    detachFromBuilding(u); save(); return true;
+  },
+
+  posts: (bid) => state.posts.filter((p) => p.buildingId === bid),
+  post: (id) => state.posts.find((p) => p.id === id) || null,
+  addPost(user, data) {
+    if (!user || !user.buildingId) return null;
+    const total = data.total;
+    const p = { ...data, id: newId(), buildingId: user.buildingId, ownerId: user.id, by: user.name, left: total, gone: false, createdAt: Date.now() };
+    state.posts.unshift(p);
+    if (!save()) { state.posts.shift(); return null; }
+    return p;
+  },
+  updatePost(id, changes) { const p = this.post(id); if (p) { Object.assign(p, changes); save(); } },
+  deletePost(id) {
+    state.posts = state.posts.filter((p) => p.id !== id);
+    state.claims = state.claims.filter((c) => c.postId !== id);
+    save();
+  },
+
+  claimedPortions,
+  claimsFor: (userId) => state.claims.filter((c) => c.userId === userId),
+  claim: (id) => state.claims.find((c) => c.id === id) || null,
+  /* Safe claiming: the checks live here, so a second person can never take portions that are gone. */
+  makeClaim(postId, user, portions) {
+    const p = this.post(postId);
+    if (!p || !user || user.buildingId !== p.buildingId || p.ownerId === user.id) return null;
+    if (p.gone || p.until <= Date.now() || !(portions >= 1) || p.left < portions) return null;
+    p.left -= portions;
+    const c = { id: newId(), postId, userId: user.id, portions, at: Date.now(), status: 'ready' };
+    state.claims.unshift(c); save();
+    return c;
+  },
+  setClaimStatus(id, status) {
+    const c = this.claim(id); if (!c) return;
+    if (status === 'returned' && c.status === 'ready') {
+      const p = this.post(c.postId); if (p) p.left = Math.min(p.total, p.left + c.portions);
+    }
+    c.status = status; save();
+  },
+
+  addReport(postId, userId, reason, text) {
+    state.reports.push({ id: newId(), postId, userId, reason, text, at: Date.now() }); save();
+  },
+  reset() { state = seed(); save(); }
+};
+
+loadState();
+
+/* =====================================================================
+   VIEW HELPERS
+   ===================================================================== */
 const WARN_TAGS = ['Nuts', 'Dairy', 'Gluten', 'Egg'];
-const DIET_TAGS = ['Vegetarian', 'Vegan', 'Spicy'];
+const DIETS = [['Vegetarian', 'Vegetarian'], ['Vegan', 'Vegan'], ['Meat', 'Contains meat or fish']];
+const tagLabel = (t) => (t === 'Meat' ? 'Contains meat or fish' : t);
 const CATEGORIES = {
   'Meal':        { color: '#F0D49A', icon: '<path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5"/>' },
   'Fruit & veg': { color: '#CFE1B9', icon: '<path d="M12 8c-4 0-7 3-7 7s3 6 7 6 7-2 7-6-3-7-7-7z"/><path d="M12 8c0-2 1-4 3-5M12 8c-1-2-3-3-5-3"/>' },
@@ -351,24 +608,34 @@ const ICONS = {
   share: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
   claims: '<path d="M6 4h12v16l-6-4-6 4z"/>',
   profile: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
+  login: '<path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M14 8l4 4-4 4M18 12H9"/>',
   pin: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   pot: '<path d="M4 9h16v4a8 8 0 0 1-16 0z"/><path d="M2 9h20"/>',
   cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',
   warn: '<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
   back: '<path d="M15 6l-6 6 6 6"/>',
-  chev: '<path d="M9 6l6 6-6 6"/>',
   camera: '<path d="M4 7h3l2-3h6l2 3h3v12H4z"/><circle cx="12" cy="13" r="3.5"/>',
-  bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  home2: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
   wa: '<path d="M4 20l1.4-4.3A8 8 0 1 1 8.6 19z"/>'
 };
 const svg = (name, size = 20, extra = '') =>
   `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${ICONS[name] || CATEGORIES[name]?.icon || ''}</svg>`;
 
-const isActive = (p) => p.left > 0 && p.until > Date.now();
+/* who is looking, and which building's food do they see? */
+const isMember = (u) => !!(u && u.verified && u.buildingId && DB.building(u.buildingId));
+const viewBuildingId = () => { const u = Auth.current(); return isMember(u) ? u.buildingId : DEMO_BUILDING; };
+const setupHref = (u) => (!u ? '#/login' : !u.verified ? '#/verify' : '#/join');
+const isMine = (p) => { const u = Auth.current(); return !!u && p.ownerId === u.id; };
+
+const leftNow = (p) => (p.gone ? 0 : p.left);
+const isActive = (p) => !p.gone && p.left > 0 && p.until > Date.now();
 const initial = (name) => esc((name || '?').trim().charAt(0).toUpperCase() || '?');
-const giverName = (p) => (p.mine ? (DB.profile().name || 'You') : p.by);
+const giverName = (p) => (DB.user(p.ownerId)?.name || p.by || 'A neighbor');
+const allergyClash = (p) => { const u = Auth.current(); const mine = (u && u.allergies) || []; return p.tags.filter((t) => mine.includes(t)); };
 
 function timeLeft(until) {
   const d = until - Date.now();
@@ -380,7 +647,7 @@ function timeLeft(until) {
   return { text: `${Math.round(h / 24)}d left`, cls: '' };
 }
 function timeBadge(p) {
-  if (p.left <= 0) return `<span class="badge grey">All gone</span>`;
+  if (p.gone || p.left <= 0) return `<span class="badge grey">All gone</span>`;
   const t = timeLeft(p.until);
   return `<span class="badge ${t.cls}" data-until="${p.until}">${t.text}</span>`;
 }
@@ -393,7 +660,7 @@ function fmtWhen(ts) {
   if (ts >= day - 24 * HOUR && ts < day) return `yesterday ${hm}`;
   return d.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + hm;
 }
-const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+function toLocalInput(ts) { const d = new Date(ts); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); }
 
 function tile(p, size) {
   const c = CATEGORIES[p.category] || CATEGORIES.Other;
@@ -402,18 +669,7 @@ function tile(p, size) {
   return `<div class="tile" style="${style}">${svg(p.category, size && size < 70 ? 26 : 36)}</div>`;
 }
 function tagBadges(p) {
-  return p.tags.map((t) => `<span class="badge ${WARN_TAGS.includes(t) ? 'warn' : ''}">${esc(t)}</span>`).join('');
-}
-function allergyClash(p) {
-  const mine = DB.profile().allergies || [];
-  return p.tags.filter((t) => mine.includes(t));
-}
-
-let toastTimer;
-function toast(msg) {
-  const el = $('#toast');
-  el.textContent = msg; el.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+  return p.tags.map((t) => `<span class="badge ${WARN_TAGS.includes(t) ? 'warn' : ''}">${esc(tagLabel(t))}</span>`).join('');
 }
 
 /* Shrinks a photo so it fits in browser storage. */
@@ -437,155 +693,294 @@ function readPhoto(file) {
   });
 }
 
+const demoBanner = () => (APP.demo
+  ? `<div class="note demo" role="note"><b>Demo mode.</b> Accounts and posts are saved on this device only, and no real emails are sent.</div>` : '');
+const notFound = (msg, href = '#/discover', label = 'Back to Discover') =>
+  `<div class="empty" style="margin-top:24px">${esc(msg)}<br><a href="${href}" style="font-weight:700">${esc(label)}</a></div>`;
+
+const pwInput = (id, auto) => `<div class="pw"><input id="${id}" type="password" autocomplete="${auto}" autocapitalize="off" spellcheck="false"><button type="button" class="pwtoggle" data-for="${id}" aria-pressed="false" aria-label="Show password">Show</button></div>`;
+function wirePw(root) {
+  $$('.pwtoggle', root).forEach((b) => b.addEventListener('click', () => {
+    const input = $('#' + b.dataset.for, root), show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    b.textContent = show ? 'Hide' : 'Show';
+    b.setAttribute('aria-pressed', show);
+    b.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+  }));
+}
+function formError(root, msg, fieldId) {
+  $$('.field.bad', root).forEach((x) => x.classList.remove('bad'));
+  if (fieldId) $('#' + fieldId, root)?.classList.add('bad');
+  const err = $('#err', root); err.textContent = msg; err.hidden = !msg;
+  if (fieldId) $('#' + fieldId + ' input, #' + fieldId + ' textarea, #' + fieldId + ' select', root)?.focus();
+}
+async function copyText(text, okMsg) {
+  try { await navigator.clipboard.writeText(text); toast(okMsg); }
+  catch (e) { toast('Could not copy. Select the code and copy it by hand.'); }
+}
+
 /* =====================================================================
    NAVIGATION
    ===================================================================== */
-const TABS = [
-  { key: 'home', label: 'Home', href: '#/home' },
-  { key: 'discover', label: 'Discover', href: '#/discover' },
-  { key: 'share', label: 'Share', href: '#/share' },
-  { key: 'claims', label: 'Claims', href: '#/claims' },
-  { key: 'profile', label: 'Profile', href: '#/profile' }
-];
+let currentRoute = 'home', prevHash = '', returnTo = '', flash = '', homeRefresh = null;
+const go = (hash) => { if (location.hash === hash) render(); else location.hash = hash; };
+
 function renderNav(active) {
-  $('#tabbar').innerHTML = TABS.map((t) =>
-    `<a href="${t.href}" class="${t.key === active ? 'on' : ''}" ${t.key === active ? 'aria-current="page"' : ''}>${svg(t.key, 22)}${t.label}</a>`).join('');
-  $('#topnav').innerHTML = TABS.map((t) =>
-    `<a href="${t.href}" class="${t.key === active ? 'on' : ''}" ${t.key === active ? 'aria-current="page"' : ''}>${t.label}</a>`).join('');
+  const u = Auth.current(), member = isMember(u);
+  const tabs = member
+    ? [['home', 'Home', '#/home'], ['discover', 'Discover', '#/discover'], ['share', 'Share', '#/share'], ['claims', 'Claims', '#/claims'], ['profile', 'Profile', '#/profile']]
+    : [['home', 'Home', '#/home'], ['discover', 'Discover', '#/discover'], ['share', 'Share', '#/share'],
+       u ? ['profile', 'Finish setup', setupHref(u)] : ['login', 'Log in', '#/login']];
+  const link = (t, withIcon) => `<a href="${t[2]}" class="${t[0] === active ? 'on' : ''}" ${t[0] === active ? 'aria-current="page"' : ''}>${withIcon ? svg(t[0], 22) : ''}${t[1]}</a>`;
+  const tb = $('#tabbar');
+  tb.style.gridTemplateColumns = `repeat(${tabs.length},minmax(0,1fr))`;
+  tb.innerHTML = tabs.map((t) => link(t, true)).join('');
+  $('#topnav').innerHTML = tabs.filter((t) => t[0] !== 'login').map((t) => link(t, false)).join('');
+  $('#topauth').innerHTML = !u
+    ? `<a class="btn ghost sm hide-sm" href="#/login">Log in</a><a class="btn sm" href="#/signup">Sign up</a>`
+    : `<a class="avchip" href="${member ? '#/profile' : setupHref(u)}" aria-label="${member ? 'Your profile' : 'Finish setting up your account'}">${initial(u.name)}</a>`;
 }
 
 const routes = {
-  home: { tab: 'home', view: viewHome },
-  discover: { tab: 'discover', view: viewDiscover },
-  food: { tab: 'discover', view: viewFood },
-  claimed: { tab: 'claims', view: viewClaimed },
-  share: { tab: 'share', view: viewShare },
-  claims: { tab: 'claims', view: viewClaims },
-  profile: { tab: 'profile', view: viewProfile }
+  home:          { tab: 'home',     view: viewHome },
+  discover:      { tab: 'discover', view: viewDiscover },
+  food:          { tab: 'discover', view: viewFood },
+  login:         { tab: 'login',    view: viewLogin,  guestOnly: true },
+  signup:        { tab: 'login',    view: viewSignup, guestOnly: true },
+  forgot:        { tab: 'login',    view: viewForgot, guestOnly: true },
+  verify:        { tab: 'profile',  view: viewVerify, needs: 'user' },
+  join:          { tab: 'profile',  view: viewJoin,   needs: 'verified' },
+  newbuilding:   { tab: 'profile',  view: viewNewBuilding, needs: 'verified' },
+  buildingready: { tab: 'profile',  view: viewBuildingReady, needs: 'member' },
+  share:         { tab: 'share',    view: (a) => viewShare(a, null), needs: 'member', flash: 'Log in to share your extra food.' },
+  edit:          { tab: 'share',    view: (a, id) => viewShare(a, id), needs: 'member', flash: 'Log in to edit your post.' },
+  claimed:       { tab: 'claims',   view: viewClaimed, needs: 'member', flash: 'Log in to see your claims.' },
+  claims:        { tab: 'claims',   view: viewClaims,  needs: 'member', flash: 'Log in to see your claims.' },
+  profile:       { tab: 'profile',  view: viewProfile, needs: 'member', flash: 'Log in to see your profile.' }
 };
-function render() {
+
+/* Decides where a person may go. Returns a hash to redirect to, or '' if the page is fine. */
+function guard(r) {
+  const u = Auth.current();
+  if (r.guestOnly && u) return !u.verified ? '#/verify' : !isMember(u) ? '#/join' : '#/home';
+  if (!r.needs) return '';
+  const want = r.needs === 'member';             // only remember pages the person really wanted to open
+  if (!u) { if (want) returnTo = location.hash; flash = r.flash || 'Log in to continue.'; return '#/login'; }
+  if (r.needs === 'user') return u.verified ? (isMember(u) ? '#/home' : '#/join') : '';
+  if (!u.verified) { if (want) returnTo = location.hash; return '#/verify'; }
+  if (want && !isMember(u)) { returnTo = location.hash; return '#/join'; }
+  return '';
+}
+
+function hiddenSpot() {
+  const u = Auth.current();
+  return !u ? 'Pickup spot shown after login' : (!u.verified ? 'Pickup spot shown after you confirm your email' : 'Pickup spot shown after you join a building');
+}
+
+function render(opts = {}) {
   const [, name = 'home', arg] = (location.hash || '#/home').split('/');
   const r = routes[name] || routes.home;
+  const redirect = guard(r);
+  if (redirect) { location.replace(location.pathname + location.search + redirect); return; }
+  currentRoute = routes[name] ? name : 'home';
+  homeRefresh = null;
+  unmountHero();
   renderNav(r.tab);
-  const app = $('#app');
+  const app = $('#app'), y = window.scrollY;
   app.innerHTML = '';
+  app.onclick = null;
   r.view(app, arg && decodeURIComponent(arg));
-  window.scrollTo(0, 0);
+  if (opts.keepScroll) window.scrollTo(0, y);
+  else { window.scrollTo(0, 0); app.focus({ preventScroll: true }); }
 }
-window.addEventListener('hashchange', render);
+/* Another tab changed the data: pick it up instead of overwriting it, and redraw pages that have no form. */
+window.addEventListener('storage', (e) => {
+  if (e.key !== STORAGE_KEY || !persistOK) return;
+  try { const n = JSON.parse(e.newValue); if (n && Array.isArray(n.users)) state = n; else return; } catch (err) { return; }
+  if (!Auth.current() && /^#\/(claims|profile|share|edit|join|verify|claimed)/.test(location.hash)) { render(); return; }
+  const typing = document.activeElement && document.activeElement.matches('input,textarea,select');
+  if (!typing && !/^#\/(share|edit|login|signup|forgot|newbuilding)/.test(location.hash)) render({ keepScroll: true });
+});
+window.addEventListener('hashchange', (e) => {
+  try { prevHash = new URL(e.oldURL).hash; } catch (err) { prevHash = ''; }
+  render();
+});
 
-/* Keeps countdowns fresh without redrawing the page (so forms are not wiped). */
+/* Keeps countdowns fresh without redrawing the page (so forms are not wiped),
+   and hides food that has just expired. */
 setInterval(() => {
+  let expired = false;
   $$('[data-until]').forEach((el) => {
-    const t = timeLeft(Number(el.dataset.until));
-    el.textContent = t.text;
-    el.className = 'badge ' + t.cls;
+    const until = Number(el.dataset.until), t = timeLeft(until);
+    el.textContent = t.text; el.className = 'badge ' + t.cls;
+    if (until <= Date.now()) expired = true;
   });
+  if (!expired) return;
+  const typing = document.activeElement && document.activeElement.matches('input,textarea,select');
+  if (homeRefresh) homeRefresh();
+  else if (currentRoute === 'discover' && !typing) render({ keepScroll: true });
 }, 30e3);
 
+function logOut() { Auth.logOut(); returnTo = ''; flash = ''; toast('Logged out.'); go('#/home'); }
+
+/* After logging in or finishing a setup step: go to the next step, or back to where the person was. */
+function afterAuth() {
+  const u = Auth.current();
+  if (!u.verified) return go('#/verify');
+  if (!isMember(u)) return go('#/join');
+  const to = returnTo || '#/home'; returnTo = '';
+  go(to);
+}
+
 /* =====================================================================
-   SCREENS
+   ANIMATED HERO
+   ---------------------------------------------------------------------
+   The 3D scene lives in hero3d.js and is only downloaded when the Home
+   screen is shown, motion is allowed and data saver is off. Leaving the
+   Home screen stops it and frees the GPU.
+   ===================================================================== */
+let heroStop = null, heroToken = 0;
+function unmountHero() { heroToken++; if (heroStop) { heroStop(); heroStop = null; } }
+function mountHero(app) {
+  const el = $('.hero3d', app); if (!el) return;
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $$('[data-scroll]', el).forEach((a) => a.addEventListener('click', (e) => {
+    e.preventDefault();
+    const t = document.getElementById(a.dataset.scroll);
+    if (t) t.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
+  }));
+  const saveData = navigator.connection && navigator.connection.saveData;
+  if (calm || saveData) { el.classList.add('no-webgl'); return; }   // static glow only
+  const mine = ++heroToken;
+  import('./hero3d.js').then((m) => {
+    if (mine !== heroToken || !el.isConnected) return;               // user already left Home
+    heroStop = m.initHero(el);
+  }).catch(() => el.classList.add('no-webgl'));                       // offline or blocked
+}
+
+/* =====================================================================
+   SCREENS: food
    ===================================================================== */
 function foodCard(p) {
-  const clash = allergyClash(p);
+  const u = Auth.current(), member = isMember(u);
+  const clash = member ? allergyClash(p) : [];
+  const who = member ? giverName(p) : 'A neighbor';
   return `
   <a class="card ${isActive(p) ? '' : 'gone'}" href="#/food/${p.id}">
     ${tile(p)}
     <div class="body">
       <div class="row"><span class="name">${esc(p.name)}</span>${timeBadge(p)}</div>
-      <span class="meta">${p.left} ${esc(p.unit)} left · ${esc(p.spot)}</span>
+      <span class="meta">${leftNow(p)} ${esc(p.unit)} left · ${member ? esc(p.spot) : hiddenSpot()}</span>
       <div class="tags">${clash.length ? `<span class="badge alert">${svg('warn', 12)} Has your allergen: ${esc(clash.join(', '))}</span>` : tagBadges(p)}</div>
-      <span class="by"><span class="av">${initial(giverName(p))}</span>${esc(giverName(p))}${p.mine ? ' (you)' : ''}</span>
+      <span class="by"><span class="av">${member ? initial(who) : '?'}</span>${esc(who)}${isMine(p) ? ' (you)' : ''}</span>
     </div>
   </a>`;
 }
 const byEnding = (a, b) => a.until - b.until;
 
 function viewHome(app) {
-  const active = DB.posts().filter(isActive).sort(byEnding);
-  const loc = DB.profile().building;
+  const u = Auth.current(), member = isMember(u);
+  const b = DB.building(viewBuildingId());
+  const ctas = member
+    ? `<a class="btn primary" href="#/discover">Find food nearby</a><a class="btn ghost" href="#/share">Share extra food</a>`
+    : u ? `<a class="btn primary" href="${setupHref(u)}">Finish setting up</a><a class="btn ghost" href="#/discover">Browse the feed</a>`
+        : `<a class="btn primary" href="#/signup">Join your building</a><a class="btn ghost" href="#/login">Log in</a>`;
   app.innerHTML = `
-    ${loc ? `<p class="loc" style="margin:4px 4px 0">${svg('pin', 14)} ${esc(loc)}</p>` : ''}
-    <section class="hero">
-      <h1>Good food shouldn't go to waste.</h1>
-      <p>Share what you have. Find what you need. Help your neighborhood.</p>
-      <div class="ctas">
-        <a class="btn" href="#/discover">Find food nearby</a>
-        <a class="btn ghost" href="#/share">Share extra food</a>
+    <section class="hero3d" aria-labelledby="hero-title">
+      <canvas aria-hidden="true"></canvas>
+      <div class="inner">
+        <div class="eyebrow"><i></i>Free food, one building at a time</div>
+        <h1 class="headline" id="hero-title">
+          <span class="ln" style="--i:0"><span>Good food</span></span>
+          <span class="ln" style="--i:1"><span>shouldn't go</span></span>
+          <span class="ln" style="--i:2"><span class="accent">to waste.</span></span>
+        </h1>
+        <p class="lede">Share what you have. Find what you need. Help your neighborhood.</p>
+        <div class="ctas">
+          ${ctas}
+          <a class="ulink" href="#/home" data-scroll="how">How it works</a>
+        </div>
       </div>
-      <svg class="art" viewBox="0 0 110 130" fill="none" stroke="#2E6B3F" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M60 125V40"/><path d="M60 80c-14-2-24-12-26-28 16 1 26 12 26 28z"/><path d="M60 62c14-2 24-12 26-28-16 1-26 12-26 28z"/><path d="M60 42c-8-4-12-12-10-24 9 4 12 13 10 24z"/></svg>
     </section>
 
-    <div class="sechead"><h2>Available now <span class="muted" style="font-weight:500">(${active.length})</span></h2><a href="#/discover">See all</a></div>
-    <div class="list three">${active.slice(0, 3).map(foodCard).join('') || `<div class="empty">No food right now. Be the first to share!</div>`}</div>
+    ${member ? `<p class="loc" style="margin:14px 4px 0">${svg('pin', 14)} ${esc(b.name)}</p>`
+      : `<div class="note" style="margin-top:16px">You're browsing a <b>${esc(b.name)}</b> preview. <a href="${setupHref(u)}"><b>${!u ? 'Sign up' : 'Finish setting up'}</b></a> to claim food and share yours with your own building.</div>`}
+    <div id="avail"></div>
 
-    <div class="sechead"><h2>How it works</h2></div>
+    <div class="sechead" id="how"><h2>How it works</h2></div>
     <div class="steps">
-      <div class="step"><i>1</i><div><b>Post it</b><div class="muted" style="font-size:14px">Add what you have, where, and until when.</div></div></div>
+      <div class="step"><i>1</i><div><b>Post it</b><div class="muted" style="font-size:14px">Add what you have, what's in it, where, and until when.</div></div></div>
       <div class="step"><i>2</i><div><b>Neighbors claim</b><div class="muted" style="font-size:14px">They reserve the portions they need.</div></div></div>
       <div class="step"><i>3</i><div><b>Pick up</b><div class="muted" style="font-size:14px">Collected from a shared spot. Nothing wasted.</div></div></div>
     </div>
 
     <div class="alertcard">
       ${svg('bell', 26, 'style="color:#CFE3BF;flex-shrink:0"')}
-      <div><b>Alerts for new food</b><small>Coming in the next version, so you never miss a post.</small></div>
+      <div><b>Alerts for new food <span class="badge" style="margin-left:4px">Soon</span></b><small>Coming in a later version, so you never miss a post.</small></div>
     </div>`;
+  const draw = () => {
+    const active = DB.posts(b.id).filter(isActive).sort(byEnding);
+    $('#avail').innerHTML = `
+      <div class="sechead"><h2>Available now <span class="muted" style="font-weight:500">(${active.length})</span></h2><a href="#/discover">See all</a></div>
+      <div class="list three">${active.slice(0, 3).map(foodCard).join('') || `<div class="empty">No food right now. ${member ? 'Be the first to share!' : ''}</div>`}</div>`;
+  };
+  draw(); homeRefresh = draw;
+  mountHero(app);
 }
 
+const discoverState = { filter: 'All', q: '', safe: false };
 function viewDiscover(app) {
-  let filter = 'All', query = '';
+  const u = Auth.current(), member = isMember(u), b = DB.building(viewBuildingId()), S = discoverState;
   app.innerHTML = `
-    <div class="pagehead"><h1>Discover</h1><p>Free food shared by your neighbors.</p></div>
-    <label class="search">${svg('discover', 18, 'style="color:var(--soft)"')}<span class="sr">Search food</span><input id="q" type="search" placeholder="Search food or place..." autocomplete="off"></label>
+    <div class="pagehead"><h1>Discover</h1><p>${member ? `Free food shared in ${esc(b.name)}.` : 'A preview of free food shared by neighbors.'}</p></div>
+    ${member ? '' : `<div class="note">This is the <b>${esc(b.name)}</b> preview. <a href="${setupHref(u)}"><b>${!u ? 'Log in or sign up' : 'Finish setting up'}</b></a> to claim food and see pickup spots.</div>`}
+    <label class="search">${svg('discover', 18, 'style="color:var(--soft)"')}<span class="sr">Search food</span><input id="q" type="search" placeholder="Search food or ingredients..." autocomplete="off" value="${esc(S.q)}"></label>
     <div class="chips scroll" id="chips" style="margin-top:12px" role="group" aria-label="Filter by type"></div>
     <div class="list three" id="list" style="margin-top:12px"></div>`;
-  const chips = ['All', 'Meal', 'Fruit & veg', 'Baked', 'Other', 'Vegetarian', 'Vegan'];
+  const chips = ['All', 'Meal', 'Fruit & veg', 'Baked', 'Other', 'Vegetarian', 'Vegan', 'No meat'];
   const drawChips = () => {
-    $('#chips').innerHTML = chips.map((c) => `<button type="button" class="chip" aria-pressed="${c === filter}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
+    $('#chips').innerHTML = (member ? `<button type="button" class="chip warn" data-safe aria-pressed="${S.safe}">Safe for me</button>` : '') +
+      chips.map((c) => `<button type="button" class="chip" aria-pressed="${c === S.filter}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
+  };
+  const matches = (p) => {
+    if (S.filter === 'No meat') { if (p.tags.includes('Meat')) return false; }
+    else if (S.filter === 'Vegetarian') { if (!p.tags.includes('Vegetarian') && !p.tags.includes('Vegan')) return false; }
+    else if (S.filter !== 'All' && p.category !== S.filter && !p.tags.includes(S.filter)) return false;
+    if (S.safe && allergyClash(p).length) return false;
+    const q = S.q.trim().toLowerCase();
+    return !q || (p.name + ' ' + p.spot + ' ' + p.note + ' ' + (p.ingredients || '')).toLowerCase().includes(q);
   };
   const drawList = () => {
-    const q = query.trim().toLowerCase();
-    const all = DB.posts();
-    const shown = all.filter(isActive).filter((p) => {
-      if (filter !== 'All' && p.category !== filter && !p.tags.includes(filter)) return false;
-      return !q || (p.name + ' ' + p.spot + ' ' + p.note).toLowerCase().includes(q);
-    }).sort(byEnding);
+    const shown = DB.posts(b.id).filter(isActive).filter(matches).sort(byEnding);
     $('#list').innerHTML = shown.map(foodCard).join('') ||
-      `<div class="empty">Nothing matches right now.<br><a href="#/share" style="font-weight:700">Share something yourself</a></div>`;
+      `<div class="empty">Nothing matches right now.<br><a href="${member ? '#/share' : setupHref(u)}" style="font-weight:700">${member ? 'Share something yourself' : 'Sign up to share food'}</a></div>`;
   };
   $('#chips').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-c]'); if (!b) return;
-    filter = b.dataset.c; drawChips(); drawList();
+    if (e.target.closest('[data-safe]')) {
+      if (!S.safe && !((u.allergies || []).length)) { toast('Add your allergies in Profile first.'); return; }
+      S.safe = !S.safe; drawChips(); drawList(); return;
+    }
+    const c = e.target.closest('[data-c]'); if (!c) return;
+    S.filter = c.dataset.c; drawChips(); drawList();
   });
-  $('#q').addEventListener('input', (e) => { query = e.target.value; drawList(); });
+  $('#q').addEventListener('input', (e) => { S.q = e.target.value; drawList(); });
   drawChips(); drawList();
 }
 
 function viewFood(app, id) {
-  const p = DB.post(id);
-  if (!p) { app.innerHTML = `<div class="empty" style="margin-top:24px">This food post no longer exists.<br><a href="#/discover" style="font-weight:700">Back to Discover</a></div>`; return; }
+  const p = DB.post(id), u = Auth.current(), member = isMember(u);
+  if (!p || p.buildingId !== viewBuildingId()) { app.innerHTML = notFound('This food post no longer exists.'); return; }
   const c = CATEGORIES[p.category] || CATEGORIES.Other;
   const warns = p.tags.filter((t) => WARN_TAGS.includes(t));
   const diets = p.tags.filter((t) => !WARN_TAGS.includes(t));
-  const clash = allergyClash(p);
-  const active = isActive(p);
-  let n = Math.min(1, p.left);
-  const waText = `Free food on Neighborly: ${p.name} (${p.left} ${p.unit}) at ${p.spot}, until ${fmtWhen(p.until)}.`;
+  const clash = member ? allergyClash(p) : [];
+  const active = isActive(p), mine = isMine(p);
+  const myClaim = member ? DB.claimsFor(u.id).find((x) => x.postId === p.id && x.status === 'ready') : null;
+  let n = Math.min(1, leftNow(p));
+  const waText = `Free food on Neighborly: ${p.name} (${leftNow(p)} ${p.unit}) at ${p.spot}, until ${fmtWhen(p.until)}.`;
+  const back = prevHash && !prevHash.startsWith('#/food/') && !/^#\/(login|signup|verify|join)/.test(prevHash) ? prevHash : '#/discover';
 
-  let action;
-  if (p.mine) {
-    action = `
-      <div class="panel">
-        <b>This is your post</b>
-        <div class="bar" aria-label="${p.total - p.left} of ${p.total} claimed"><span style="width:${(p.total - p.left) / p.total * 100}%"></span></div>
-        <span class="muted" style="font-size:14px">${p.total - p.left} of ${p.total} ${esc(p.unit)} claimed</span>
-        <div class="stack2" style="display:grid;gap:10px">
-          ${active ? `<button class="btn dark sm" id="gone">Mark all gone</button>` : ''}
-          <button class="btn danger sm" id="del">Delete post</button>
-        </div>
-      </div>`;
-  } else if (active) {
-    action = `
+  const stepper = () => `
       <div class="claimrow">
         <b>How many ${esc(p.unit)}?</b>
         <div class="stepper">
@@ -595,15 +990,49 @@ function viewFood(app, id) {
         </div>
       </div>
       <button class="btn" id="claim" style="width:100%">Claim this food</button>`;
+
+  let action;
+  if (mine) {
+    const got = DB.claimedPortions(p.id);
+    action = `
+      <div class="panel">
+        <b>This is your post</b>
+        <div class="bar" aria-label="${got} of ${p.total} claimed"><span style="width:${got / p.total * 100}%"></span></div>
+        <span class="muted" style="font-size:14px">${got} of ${p.total} ${esc(p.unit)} claimed</span>
+        <div class="stack2" style="display:grid;gap:10px">
+          <a class="btn ghost sm" href="#/edit/${p.id}">Edit post</a>
+          ${active ? `<button class="btn dark sm" id="gone">Mark all gone</button>` : (p.gone ? `<button class="btn dark sm" id="undogone">Undo "all gone"</button>` : '')}
+          <button class="btn danger sm" id="del">Delete post</button>
+        </div>
+      </div>`;
+  } else if (!member) {
+    action = `
+      <div class="panel">
+        <b>${!u ? 'Log in to claim this food' : 'Finish setting up to claim this food'}</b>
+        <span class="muted" style="font-size:14px">${!u ? 'You need an account so neighbors know who is picking up.' : (!u.verified ? 'Confirm your email first.' : 'Join your building with a code first.')}</span>
+        <a class="btn" href="${setupHref(u)}" id="needlogin">${!u ? 'Log in' : 'Continue'}</a>
+        ${!u ? `<a class="btn ghost" href="#/signup" id="needsignup">Create an account</a>` : ''}
+      </div>`;
+  } else if (active) {
+    action = (myClaim ? `
+      <div class="panel" style="background:var(--green-lt)">
+        <b>You claimed ${myClaim.portions} ${esc(p.unit)}</b>
+        <span class="muted" style="font-size:14px">Ready to pick up before ${fmtWhen(p.until)}.</span>
+        <div class="stack2" style="display:grid;gap:10px">
+          <a class="btn ghost sm" href="#/claimed/${myClaim.id}">View my claim</a>
+          <button class="btn danger sm" id="giveback">Give it back</button>
+        </div>
+      </div>` : stepper());
   } else {
-    action = `<button class="btn" disabled style="width:100%">${p.left <= 0 ? 'All gone' : 'Expired'}</button>`;
+    action = `<button class="btn" disabled style="width:100%">${leftNow(p) <= 0 ? 'All gone' : 'Expired'}</button>`;
   }
 
+  const noAllergens = !warns.length && p.ingredients;
   app.innerHTML = `
     <div class="detail">
       <div class="photo" style="background:${c.color}">
         ${p.photo ? `<img src="${p.photo}" alt="Photo of ${esc(p.name)}">` : svg(p.category, 96, 'style="opacity:.45"')}
-        <a class="back" href="#/discover" aria-label="Back to Discover">${svg('back', 20)}</a>
+        <a class="back" href="${esc(back)}" aria-label="Back">${svg('back', 20)}</a>
         ${timeBadge(p)}
       </div>
       <div class="info">
@@ -612,42 +1041,79 @@ function viewFood(app, id) {
         </div>
         ${clash.length ? `<div class="warnbox" style="background:var(--warn);color:#fff">${svg('warn', 20, 'style="color:#fff;flex-shrink:0"')}<div><b>Contains ${esc(clash.join(', '))}</b>, which you marked as an allergy.</div></div>` : ''}
         <div class="facts">
-          <div class="fact">${svg('pot')}<span><b>${p.left}</b> of ${p.total} ${esc(p.unit)} available</span></div>
-          <div class="fact">${svg('pin')}<span>${esc(p.spot)}</span></div>
+          <div class="fact">${svg('pot')}<span><b>${leftNow(p)}</b> of ${p.total} ${esc(p.unit)} available</span></div>
+          <div class="fact">${svg('pin')}<span>${member ? esc(p.spot) : hiddenSpot()}</span></div>
           <div class="fact">${svg('clock')}<span>Pick up before ${fmtWhen(p.until)}</span></div>
           <div class="fact">${svg('cal')}<span>${p.category === 'Fruit & veg' ? 'Picked' : 'Made'} ${fmtWhen(p.cookedAt)}</span></div>
         </div>
-        ${diets.length ? `<div class="tags">${diets.map((t) => `<span class="badge">${esc(t)}</span>`).join('')}</div>` : ''}
-        ${warns.length ? `<div class="warnbox">${svg('warn', 20)}<div><b>Contains ${esc(warns.join(', '))}.</b> Home food, so ask the giver if you have allergies.</div></div>` : ''}
+        ${diets.length ? `<div class="tags">${diets.map((t) => `<span class="badge">${esc(tagLabel(t))}</span>`).join('')}</div>` : ''}
+        <div><h2 style="font-size:16px;margin-bottom:6px">Ingredients</h2>
+          <p style="margin:0;color:#3F4D3B">${p.ingredients ? esc(p.ingredients) : 'Not listed. Ask the giver before you eat it.'}</p></div>
+        ${warns.length ? `<div class="warnbox">${svg('warn', 20)}<div><b>Contains ${esc(warns.join(', '))}.</b> Home food, so check the ingredients if you have allergies.</div></div>`
+          : noAllergens ? `<div class="warnbox" style="background:var(--green-lt);color:var(--green-dk)">${svg('check', 20)}<div>The giver says it has <b>none of the main allergens</b> (nuts, dairy, gluten, egg). Still check the ingredients.</div></div>` : ''}
         ${p.note ? `<div><h2 style="font-size:16px;margin-bottom:6px">About this food</h2><p style="margin:0;color:#3F4D3B">${esc(p.note)}</p></div>` : ''}
         <div><h2 style="font-size:16px;margin-bottom:8px">Shared by</h2>
-          <div class="person"><span class="av">${initial(giverName(p))}</span><div><b>${esc(giverName(p))}</b><div class="muted" style="font-size:13px">Shared ${fmtWhen(p.createdAt)}</div></div></div>
+          <div class="person"><span class="av">${member ? initial(giverName(p)) : '?'}</span><div><b>${member ? esc(giverName(p)) : 'A neighbor'}</b><div class="muted" style="font-size:13px">${member ? `Shared ${fmtWhen(p.createdAt)}` : 'Log in to see who shared it'}</div></div></div>
         </div>
         ${action}
-        ${active ? `<a href="https://wa.me/?text=${encodeURIComponent(waText + ' ' + location.href)}" target="_blank" rel="noopener" style="text-align:center;font-weight:700;font-size:14px;padding:6px 0 10px;display:flex;align-items:center;justify-content:center;gap:6px">${svg('wa', 18)} Also tell your WhatsApp group</a>` : ''}
+        ${member && active ? `<a href="https://wa.me/?text=${encodeURIComponent(waText)}" target="_blank" rel="noopener" style="text-align:center;font-weight:700;font-size:14px;padding:6px 0 4px;display:flex;align-items:center;justify-content:center;gap:6px">${svg('wa', 18)} Also tell your WhatsApp group</a>` : ''}
+        ${member && !mine ? `
+        <div>
+          <button class="linkbtn" id="rep-open" type="button" style="margin:0 auto;display:block">Report this post</button>
+          <form class="panel" id="rep" hidden style="margin-top:8px">
+            <div class="field"><label for="rep-reason">What is wrong?</label>
+              <select id="rep-reason"><option>Allergen or ingredient info is wrong</option><option>Food looks unsafe or spoiled</option><option>Not food, or spam</option><option>Something else</option></select></div>
+            <div class="field"><label for="rep-text">Details (optional)</label><textarea id="rep-text" maxlength="200"></textarea></div>
+            <div class="stack2" style="display:grid;gap:10px"><button class="btn dark sm" type="submit">Send report</button><button class="btn ghost sm" type="button" id="rep-cancel">Cancel</button></div>
+          </form>
+        </div>` : ''}
       </div>
     </div>`;
 
-  if (p.mine) {
-    $('#gone')?.addEventListener('click', () => { DB.updatePost(p.id, { left: 0 }); toast('Marked as all gone. Thank you!'); render(); });
+  $('#needlogin')?.addEventListener('click', () => { returnTo = location.hash; });
+  $('#needsignup')?.addEventListener('click', () => { returnTo = location.hash; });
+  if (mine) {
+    $('#gone')?.addEventListener('click', () => markGone(p.id, () => render({ keepScroll: true })));
+    $('#undogone')?.addEventListener('click', () => { DB.updatePost(p.id, { gone: false }); toast('Post is back online.'); render({ keepScroll: true }); });
     $('#del').addEventListener('click', () => {
       if (confirm('Delete this post?')) { DB.deletePost(p.id); toast('Post deleted'); location.hash = '#/claims'; }
     });
-  } else if (active) {
+  }
+  if (member && !mine && active) {
     const out = $('#n');
-    $('#less').addEventListener('click', () => { n = Math.max(1, n - 1); out.textContent = n; });
-    $('#more').addEventListener('click', () => { n = Math.min(p.left, n + 1); out.textContent = n; });
-    $('#claim').addEventListener('click', () => {
-      const claim = DB.makeClaim(p.id, n);
-      if (!claim) { toast('Sorry, not enough left.'); render(); return; }
+    $('#less')?.addEventListener('click', () => { n = Math.max(1, n - 1); out.textContent = n; });
+    $('#more')?.addEventListener('click', () => { n = Math.min(leftNow(p), n + 1); out.textContent = n; });
+    $('#claim')?.addEventListener('click', () => {
+      const claim = DB.makeClaim(p.id, u, n);
+      if (!claim) { toast('Sorry, not enough left.'); render({ keepScroll: true }); return; }
       location.hash = '#/claimed/' + claim.id;
+    });
+    $('#giveback')?.addEventListener('click', () => {
+      DB.setClaimStatus(myClaim.id, 'returned'); toast('Given back. Someone else can take it now.'); render({ keepScroll: true });
+    });
+  }
+  if (member && !mine) {
+    const form = $('#rep');
+    $('#rep-open').addEventListener('click', () => { form.hidden = !form.hidden; if (!form.hidden) $('#rep-reason').focus(); });
+    $('#rep-cancel').addEventListener('click', () => { form.hidden = true; });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      DB.addReport(p.id, u.id, $('#rep-reason').value, $('#rep-text').value.trim());
+      form.hidden = true;
+      toast('Thanks. We will review this post.');
     });
   }
 }
 
+function markGone(id, after) {
+  DB.updatePost(id, { gone: true });
+  toast('Marked as all gone. Thank you!', { label: 'Undo', run: () => { DB.updatePost(id, { gone: false }); toast('Post is back online.'); after(); } });
+  after();
+}
+
 function viewClaimed(app, id) {
-  const c = DB.claim(id), p = c && DB.post(c.postId);
-  if (!c || !p) { location.hash = '#/claims'; return; }
+  const u = Auth.current(), c = DB.claim(id), p = c && DB.post(c.postId);
+  if (!c || !p || c.userId !== u.id) { location.hash = '#/claims'; return; }
   app.innerHTML = `
     <div class="narrow done">
       <svg width="150" height="140" viewBox="0 0 150 140" fill="none" stroke="#2E6B3F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M40 60h70l-8 66H48z" fill="#E6EEDB"/><path d="M58 60c0-14 8-24 17-24s17 10 17 24"/><path d="M62 92l9 9 18-20"/><path d="M24 30l4 4M126 30l-4 4M18 70h6M126 70h6"/></svg>
@@ -657,6 +1123,7 @@ function viewClaimed(app, id) {
         <h2 style="font-size:16px">Pickup</h2>
         <div class="fact">${svg('pin')}<span>${esc(p.spot)}</span></div>
         <div class="fact">${svg('clock')}<span>Before ${fmtWhen(p.until)}</span></div>
+        ${p.ingredients ? `<div class="fact" style="align-items:flex-start">${svg('pot')}<span><b>Ingredients:</b> ${esc(p.ingredients)}</span></div>` : ''}
         ${p.note ? `<div style="border-top:1px solid #ECE8DC;padding-top:12px"><div class="muted" style="font-size:13px;font-weight:700">Note from ${esc(giverName(p))}</div><p style="margin:4px 0 0;font-style:italic">"${esc(p.note)}"</p></div>` : ''}
       </div>
       <div style="display:grid;gap:10px;margin-top:20px">
@@ -670,55 +1137,83 @@ function viewClaimed(app, id) {
   });
 }
 
-function viewShare(app) {
-  const prof = DB.profile();
-  const chosen = new Set();
-  let photo = null, hours = 3;
-  const nowLocal = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
-  const untilOpts = [[1, '1 hour'], [3, '3 hours'], [6, '6 hours'], [24, 'Tomorrow']];
+function viewShare(app, editId) {
+  const user = Auth.current(), b = DB.building(user.buildingId);
+  const editing = editId ? DB.post(editId) : null;
+  if (editId && (!editing || editing.ownerId !== user.id)) { app.innerHTML = notFound('This post could not be found.', '#/claims', 'Back to my claims'); return; }
+  const got = editing ? DB.claimedPortions(editing.id) : 0;
+  const chosen = new Set(editing ? editing.tags.filter((t) => WARN_TAGS.includes(t)) : []);
+  let none = !!(editing && editing.ingredients && !chosen.size);     // an earlier post with no allergens counts as answered
+  let warnedKey = null;
+  let diet = editing ? (['Vegetarian', 'Vegan', 'Meat'].find((d) => editing.tags.includes(d)) || '') : '';
+  let spicy = !!(editing && editing.tags.includes('Spicy'));
+  let photo = editing ? editing.photo : null;
+  let hours = editing ? null : 3;                                    // null = keep the current end time
+  const untilOpts = [[1, '1 hour'], [3, '3 hours'], [6, '6 hours'], [24, 'Until tomorrow 12:00']];
+  const spotKnown = editing ? b.spots.includes(editing.spot) : true;
 
   app.innerHTML = `
     <div class="narrow">
-      <div class="pagehead"><h1>Share your extra food</h1><p>Help your neighbors and reduce food waste.</p></div>
+      <div class="pagehead"><h1>${editing ? 'Edit your post' : 'Share your extra food'}</h1><p>${editing ? 'Changes show for your neighbors right away.' : `Helping your neighbors in ${esc(b.name)}.`}</p></div>
       <form class="form" id="f" novalidate>
-        <label class="photopick" id="pp">${svg('camera', 28, 'style="color:var(--green)"')}<span>Add photo (optional)</span>
+        <label class="photopick" id="pp">${photo ? `<img src="${photo}" alt="Chosen photo">` : ''}${svg('camera', 28, 'style="color:var(--green)"')}<span>${photo ? 'Change photo' : 'Add photo (optional)'}</span>
           <input type="file" accept="image/*" id="photo" aria-label="Add photo">
         </label>
-        <div class="field" id="f-name"><label for="name">Food name</label><input id="name" maxlength="60" placeholder="e.g. Vegetable biryani"></div>
+        <div class="field" id="f-name"><label for="name">Food name</label><input id="name" maxlength="60" placeholder="e.g. Vegetable biryani" value="${esc(editing?.name)}"></div>
         <div class="two">
           <div class="field"><label for="cat">Category</label>
-            <select id="cat">${Object.keys(CATEGORIES).map((c) => `<option>${esc(c)}</option>`).join('')}</select></div>
+            <select id="cat">${Object.keys(CATEGORIES).map((c) => `<option ${editing?.category === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
           <div class="field" id="f-qty"><label for="qty">How much?</label>
-            <div class="qty"><input id="qty" type="number" min="1" max="99" value="4" inputmode="numeric">
-              <select id="unit" aria-label="Unit"><option>portions</option><option>pieces</option><option>slices</option><option>bags</option><option>boxes</option><option>heads</option></select></div></div>
+            <div class="qty"><input id="qty" type="number" min="1" max="99" value="${editing ? editing.total : 4}" inputmode="numeric">
+              <select id="unit" aria-label="Unit">${['portions', 'pieces', 'slices', 'bags', 'boxes', 'heads'].map((x) => `<option ${editing?.unit === x ? 'selected' : ''}>${x}</option>`).join('')}</select></div></div>
         </div>
-        <div class="field"><label for="made">Made / picked at</label><input id="made" type="datetime-local" value="${nowLocal()}"></div>
-        <fieldset class="field"><legend>Available for</legend>
-          <div class="chips" id="until">${untilOpts.map(([h, l]) => `<button type="button" class="chip" data-h="${h}" aria-pressed="${h === hours}">${l}</button>`).join('')}</div></fieldset>
-        <div class="field" id="f-spot"><label for="spot">Pickup spot</label><input id="spot" maxlength="80" placeholder="e.g. Building B, table by the mailboxes" value="${esc(prof.building ? prof.building + ', ' : '')}">
+        <div class="field" id="f-ing"><label for="ing">Ingredients</label>
+          <textarea id="ing" maxlength="200" placeholder="e.g. Rice, carrots, peas, cashews, spices">${esc(editing?.ingredients)}</textarea>
+          <small>Neighbors want to know exactly what is in it.</small></div>
+        <div class="field" id="f-made"><label for="made">Made / picked at</label><input id="made" type="datetime-local" max="${toLocalInput(Date.now())}" value="${toLocalInput(editing ? editing.cookedAt : Date.now())}"></div>
+        <fieldset class="field"><legend>${editing ? 'Available until' : 'Available for'}</legend>
+          <div class="chips" id="until">${editing ? `<button type="button" class="chip" data-h="keep" aria-pressed="true">Keep (${esc(fmtWhen(editing.until))})</button>` : ''}${untilOpts.map(([h, l]) => `<button type="button" class="chip" data-h="${h}" aria-pressed="${h === hours}">${l}${editing ? ' from now' : ''}</button>`).join('')}</div></fieldset>
+        <div class="field" id="f-spot"><label for="spot">Pickup spot</label>
+          <select id="spot">${b.spots.map((s) => `<option ${editing?.spot === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}<option value="__other" ${spotKnown ? '' : 'selected'}>Other place…</option></select>
+          <input id="spot2" maxlength="60" placeholder="e.g. Bench by the bike shed" value="${spotKnown ? '' : esc(editing.spot)}" ${spotKnown ? 'hidden' : ''} aria-label="Other pickup place">
           <small>Use a shared spot like a lobby or bench, not your flat number.</small></div>
-        <fieldset class="field"><legend>Diet &amp; allergens</legend>
-          <div class="chips" id="tags">
-            ${DIET_TAGS.map((t) => `<button type="button" class="chip diet" data-t="${t}" aria-pressed="false">${t}</button>`).join('')}
-            ${WARN_TAGS.map((t) => `<button type="button" class="chip warn" data-t="${t}" aria-pressed="false">Contains ${t.toLowerCase()}</button>`).join('')}
-          </div></fieldset>
-        <div class="field"><label for="note">Note for neighbors (optional)</label><textarea id="note" maxlength="200" placeholder="e.g. Bring your own box. It's in the blue bag."></textarea></div>
-        ${prof.name ? '' : `<div class="field" id="f-who"><label for="who">Your first name</label><input id="who" maxlength="30" placeholder="So neighbors know who shared it"></div>`}
+        <fieldset class="field" id="f-diet"><legend>What kind of food is it?</legend>
+          <div class="chips" id="diet">${DIETS.map(([k, l]) => `<button type="button" class="chip diet" data-d="${k}" aria-pressed="${diet === k}">${l}</button>`).join('')}
+            <button type="button" class="chip diet" id="spicy" aria-pressed="${spicy}">Spicy</button></div></fieldset>
+        <fieldset class="field" id="f-allergen"><legend>Does it contain any of these?</legend>
+          <div class="chips" id="alg">${WARN_TAGS.map((t) => `<button type="button" class="chip warn" data-t="${t}" aria-pressed="${chosen.has(t)}">Contains ${t.toLowerCase()}</button>`).join('')}
+            <button type="button" class="chip diet" id="none" aria-pressed="${none}">None of these</button></div>
+          <small>Please answer, so nobody gets a surprise.</small></fieldset>
+        <div class="field"><label for="note">Note for neighbors (optional)</label><textarea id="note" maxlength="200" placeholder="e.g. Bring your own box. It's in the blue bag.">${esc(editing?.note)}</textarea></div>
         <p class="err" id="err" role="alert" hidden></p>
-        <button class="btn" type="submit">Share food</button>
+        <button class="btn" type="submit">${editing ? 'Save changes' : 'Share food'}</button>
       </form>
     </div>`;
 
   $('#until').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-h]'); if (!b) return;
-    hours = Number(b.dataset.h);
-    $$('#until .chip').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    const bt = e.target.closest('[data-h]'); if (!bt) return;
+    hours = bt.dataset.h === 'keep' ? null : Number(bt.dataset.h);
+    $$('#until .chip').forEach((x) => x.setAttribute('aria-pressed', x === bt));
   });
-  $('#tags').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-t]'); if (!b) return;
-    const t = b.dataset.t, on = !chosen.has(t);
-    on ? chosen.add(t) : chosen.delete(t);
-    b.setAttribute('aria-pressed', on);
+  $('#spot').addEventListener('change', (e) => { const o = e.target.value === '__other'; $('#spot2').hidden = !o; if (o) $('#spot2').focus(); });
+  $('#diet').addEventListener('click', (e) => {
+    const bt = e.target.closest('[data-d]');
+    if (bt) { diet = bt.dataset.d; $$('#diet [data-d]').forEach((x) => x.setAttribute('aria-pressed', x === bt)); return; }
+    if (e.target.closest('#spicy')) { spicy = !spicy; $('#spicy').setAttribute('aria-pressed', spicy); }
+  });
+  $('#alg').addEventListener('click', (e) => {
+    const bt = e.target.closest('[data-t]');
+    if (bt) {
+      const t = bt.dataset.t, on = !chosen.has(t);
+      on ? chosen.add(t) : chosen.delete(t);
+      bt.setAttribute('aria-pressed', on);
+      if (on) { none = false; $('#none').setAttribute('aria-pressed', false); }
+      return;
+    }
+    if (e.target.closest('#none')) {
+      none = !none; $('#none').setAttribute('aria-pressed', none);
+      if (none) { chosen.clear(); $$('#alg [data-t]').forEach((x) => x.setAttribute('aria-pressed', false)); }
+    }
   });
   $('#photo').addEventListener('change', async (e) => {
     const file = e.target.files[0]; if (!file) return;
@@ -731,34 +1226,61 @@ function viewShare(app) {
   $('#f').addEventListener('submit', (e) => {
     e.preventDefault();
     $$('.field.bad').forEach((x) => x.classList.remove('bad'));
-    const name = $('#name').value.trim(), spot = $('#spot').value.trim().replace(/,\s*$/, '');
-    const total = parseInt($('#qty').value, 10);
-    const who = $('#who') ? $('#who').value.trim() : prof.name;
-    const problems = [];
-    if (!name) { problems.push('a food name'); $('#f-name').classList.add('bad'); }
-    if (!(total >= 1 && total <= 99)) { problems.push('an amount (1–99)'); $('#f-qty').classList.add('bad'); }
-    if (!spot) { problems.push('a pickup spot'); $('#f-spot').classList.add('bad'); }
-    if (!who) { problems.push('your first name'); $('#f-who').classList.add('bad'); }
+    const name = $('#name').value.trim(), ing = $('#ing').value.trim();
+    const spot = ($('#spot').value === '__other' ? $('#spot2').value : $('#spot').value).trim();
+    const total = parseInt($('#qty').value, 10), made = new Date($('#made').value).getTime();
+    const problems = [], bad = [];
+    const need = (cond, text, id) => { if (!cond) { problems.push(text); bad.push(id); } };
+    need(name, 'a food name', 'f-name');
+    need(total >= 1 && total <= 99, 'an amount (1–99)', 'f-qty');
+    need(ing.length >= 3, 'the ingredients', 'f-ing');
+    need(!isNaN(made) && made <= Date.now() + 2 * MIN, 'a made time that is not in the future', 'f-made');
+    need(spot, 'a pickup spot', 'f-spot');
+    need(diet, 'what kind of food it is', 'f-diet');
+    need(chosen.size || none, 'an answer about allergens', 'f-allergen');
+    if (editing && total >= 1 && total < got) { problems.push(`an amount of at least ${got} (already claimed)`); bad.push('f-qty'); }
+    /* ingredient list vs. what was ticked: block clear contradictions, warn once about likely misses */
+    const low = ing.toLowerCase();
+    const KEYS = { Nuts: /\b(nut|nuts|peanut|almond|cashew|hazelnut|walnut|pistachio|pecan|marzipan|nutella)/, Dairy: /\b(milk|butter|cheese|cream|yogh?urt|yoghurt|quark|whey|ghee|paneer|mozzarella|parmesan|feta)/,
+      Gluten: /\b(wheat|flour|bread|pasta|barley|rye|spelt|couscous|semolina|noodle|bulgur|seitan)/, Egg: /\b(egg|eggs|mayo|mayonnaise|meringue)/ };
+    const meatRx = /\b(chicken|beef|pork|ham|bacon|salami|sausage|fish|salmon|tuna|shrimp|prawn|lamb|turkey|meat|gelatin)/;
+    const miss = Object.keys(KEYS).filter((k) => KEYS[k].test(low) && !chosen.has(k));
+    if (diet === 'Vegan' && (chosen.has('Dairy') || chosen.has('Egg') || KEYS.Dairy.test(low) || KEYS.Egg.test(low))) { problems.push('a diet that matches the ingredients (vegan food has no dairy or egg)'); bad.push('f-diet'); }
+    if ((diet === 'Vegan' || diet === 'Vegetarian') && meatRx.test(low)) { problems.push('a diet that matches the ingredients (they mention meat or fish)'); bad.push('f-diet'); }
     const err = $('#err');
-    if (problems.length) { err.textContent = 'Please add ' + problems.join(', ') + '.'; err.hidden = false; $('.field.bad input')?.focus(); return; }
-    if (!prof.name && who) DB.setProfile({ name: who });
-    const made = new Date($('#made').value).getTime();
-    const until = hours === 24
-      ? (() => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(12, 0, 0, 0); return d.getTime(); })()
+    if (!problems.length && miss.length && warnedKey !== miss.join()) {
+      warnedKey = miss.join();
+      err.textContent = `Your ingredients mention ${miss.join(', ').toLowerCase()}. Please tick ${miss.length > 1 ? 'those allergens' : 'that allergen'}, or press Post again if it is correct.`;
+      err.hidden = false; $('#f-allergen').classList.add('bad'); $('#f-allergen').scrollIntoView({ block: 'center' });
+      return;
+    }
+    if (problems.length) {
+      bad.forEach((id) => $('#' + id).classList.add('bad'));
+      err.textContent = 'Please add ' + problems.join(', ') + '.'; err.hidden = false;
+      $('.field.bad input, .field.bad textarea, .field.bad select, .field.bad button')?.focus();
+      return;
+    }
+    const until = hours === null ? editing.until
+      : hours === 24 ? (() => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(12, 0, 0, 0); return d.getTime(); })()
       : Date.now() + hours * HOUR;
-    const post = DB.addPost({
-      name, category: $('#cat').value, total, unit: $('#unit').value,
-      cookedAt: isNaN(made) ? Date.now() : made, until, spot,
-      note: $('#note').value.trim(), tags: [...DIET_TAGS, ...WARN_TAGS].filter((t) => chosen.has(t)),
-      by: who, photo
-    });
+    const data = {
+      name, category: $('#cat').value, total, unit: $('#unit').value, ingredients: ing,
+      cookedAt: made, until, spot, note: $('#note').value.trim(), photo,
+      tags: [diet, ...(spicy ? ['Spicy'] : []), ...WARN_TAGS.filter((t) => chosen.has(t))]
+    };
+    if (editing) {
+      DB.updatePost(editing.id, { ...data, left: total - got });
+      toast('Changes saved.'); location.hash = '#/food/' + editing.id; return;
+    }
+    const post = DB.addPost(user, data);
     if (!post) return;
-    toast('Your food is live! Neighbors can see it now.');
+    toast(APP.demo ? `Posted in ${b.name}. (Demo: saved on this device only.)` : `Your food is live in ${b.name}.`);
     location.hash = '#/food/' + post.id;
   });
 }
 
 function viewClaims(app) {
+  const user = Auth.current();
   let tab = sessionStorageGet('claimsTab') || 'current';
   app.innerHTML = `
     <div class="pagehead"><h1>My claims</h1><p>Food you've reserved and food you've shared.</p></div>
@@ -780,17 +1302,17 @@ function viewClaims(app) {
       ${c.status === 'ready' ? `<div class="acts"><button class="btn dark sm" data-picked="${c.id}">Picked up</button><button class="btn danger sm" data-return="${c.id}">Give back</button></div>` : ''}
     </div>`;
   };
-  const shareItem = (p) => `<div class="item">
+  const shareItem = (p) => { const got = DB.claimedPortions(p.id); return `<div class="item">
       <a class="top" href="#/food/${p.id}">${tile(p, 64)}<div style="flex:1;min-width:0"><b>${esc(p.name)}</b>
-        <div class="muted" style="font-size:13px">${p.total - p.left} of ${p.total} ${esc(p.unit)} claimed</div>
+        <div class="muted" style="font-size:13px">${got} of ${p.total} ${esc(p.unit)} claimed</div>
         <div style="margin-top:6px">${timeBadge(p)}</div></div></a>
-      ${isActive(p) ? `<div class="bar"><span style="width:${(p.total - p.left) / p.total * 100}%"></span></div>
-      <div class="acts"><button class="btn dark sm" data-gone="${p.id}">Mark all gone</button><a class="btn ghost sm" href="#/food/${p.id}">View post</a></div>` : ''}
-    </div>`;
+      ${isActive(p) ? `<div class="bar"><span style="width:${got / p.total * 100}%"></span></div>
+      <div class="acts"><button class="btn dark sm" data-gone="${p.id}">Mark all gone</button><a class="btn ghost sm" href="#/edit/${p.id}">Edit</a></div>` : ''}
+    </div>`; };
 
   const draw = () => {
     $$('.seg button').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === tab));
-    const claims = DB.claims(), mine = DB.posts().filter((p) => p.mine);
+    const claims = DB.claimsFor(user.id), mine = DB.posts(user.buildingId).filter((p) => p.ownerId === user.id);
     let html = '';
     if (tab === 'current') html = claims.filter((c) => c.status === 'ready').map(claimItem).join('') ||
       `<div class="empty">No claims yet.<br><a href="#/discover" style="font-weight:700">Find food nearby</a></div>`;
@@ -800,31 +1322,314 @@ function viewClaims(app) {
       `<div class="empty">Nothing here yet.</div>`;
     $('#items').innerHTML = html;
   };
-  app.addEventListener('click', (e) => {
+  app.onclick = (e) => {
     const t = e.target.closest('[data-tab]');
     if (t) { tab = t.dataset.tab; sessionStorageSet('claimsTab', tab); draw(); return; }
     const pk = e.target.closest('[data-picked]'); if (pk) { DB.setClaimStatus(pk.dataset.picked, 'picked'); toast('Enjoy your food!'); draw(); return; }
     const rt = e.target.closest('[data-return]'); if (rt) { DB.setClaimStatus(rt.dataset.return, 'returned'); toast('Given back. Someone else can take it.'); draw(); return; }
-    const gn = e.target.closest('[data-gone]'); if (gn) { DB.updatePost(gn.dataset.gone, { left: 0 }); toast('Marked as all gone. Thank you!'); draw(); }
-  });
+    const gn = e.target.closest('[data-gone]'); if (gn) markGone(gn.dataset.gone, draw);
+  };
   draw();
 }
 function sessionStorageGet(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
 function sessionStorageSet(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
 
+/* =====================================================================
+   SCREENS: accounts and buildings
+   ===================================================================== */
+function pwStrength(pw) {
+  if (!pw) return 0;
+  if (pw.length < 8) return 1;
+  let s = 1;
+  if (pw.length >= 12) s++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) s++;
+  if (/\d/.test(pw)) s++;
+  if (/[^A-Za-z0-9]/.test(pw)) s++;
+  return Math.min(5, s);
+}
+const STRENGTH = [['', 0, '#B4531F'], ['Weak', 22, '#B4531F'], ['Weak', 38, '#B4531F'], ['OK', 62, '#C98A1B'], ['Good', 82, '#4E8A4F'], ['Strong', 100, '#2E6B3F']];
+
+function viewSignup(app) {
+  app.innerHTML = `
+    <div class="narrow">
+      <div class="pagehead"><h1>Create your account</h1><p>It takes a minute. You need one to claim or share food.</p></div>
+      ${demoBanner()}
+      <form class="form" id="f" novalidate>
+        <div class="field" id="f-name"><label for="name">First name</label>
+          <input id="name" maxlength="30" autocomplete="given-name" placeholder="Shown on food you share">
+          <small>Neighbors only see your first name.</small></div>
+        <div class="field" id="f-email"><label for="email">Email</label>
+          <input id="email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="you@example.com">
+          <small id="typo" hidden></small>
+          <small>We'll send a link to confirm it's really yours.</small></div>
+        <div class="field" id="f-pw"><label for="pw">Password</label>${pwInput('pw', 'new-password')}
+          <div class="strength" aria-hidden="true"><span id="sbar"></span></div>
+          <small id="shint">At least 8 characters.</small></div>
+        <div class="rules" id="f-rules"><label class="check"><input type="checkbox" id="rules"><span>I'll only share food I would eat myself, and I understand food is shared at my own risk.</span></label></div>
+        <p class="err" id="err" role="alert" hidden></p>
+        <button class="btn" type="submit">Create account</button>
+        <p class="muted center" style="margin:0">Already have an account? <a href="#/login"><b>Log in</b></a></p>
+      </form>
+    </div>`;
+  wirePw(app);
+  const pw = $('#pw'), email = $('#email');
+  pw.addEventListener('input', () => {
+    const s = STRENGTH[pwStrength(pw.value)], bar = $('#sbar');
+    bar.style.width = s[1] + '%'; bar.style.background = s[2];
+    $('#shint').textContent = pw.value ? `Strength: ${s[0]}. ${pw.value.length < 8 ? 'Use at least 8 characters.' : 'Longer and mixed is stronger.'}` : 'At least 8 characters.';
+  });
+  const checkTypo = () => {
+    const fix = emailTypo(email.value), t = $('#typo');
+    t.hidden = !fix;
+    if (fix) t.innerHTML = `Did you mean <button type="button" class="linkbtn inline" id="usefix">${esc(fix)}</button>?`;
+  };
+  email.addEventListener('blur', checkTypo);
+  email.addEventListener('input', () => { if (!$('#typo').hidden) checkTypo(); });
+  $('#typo').addEventListener('click', (e) => { if (e.target.id === 'usefix') { email.value = e.target.textContent; $('#typo').hidden = true; } });
+
+  $('#f').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = $('#name').value.trim(), mail = normEmail(email.value), pass = pw.value;
+    if (!name) return formError(app, 'Please add your first name.', 'f-name');
+    if (!EMAIL_RE.test(mail)) return formError(app, 'That email address does not look right.', 'f-email');
+    const bad = pwProblem(pass);
+    if (bad) return formError(app, bad, 'f-pw');
+    if (!$('#rules').checked) return formError(app, 'Please accept the sharing rules to continue.', 'f-rules');
+    formError(app, '');
+    const btn = $('button[type="submit"]', app); btn.disabled = true;
+    const res = await Auth.signUp({ name, email: mail, password: pass });
+    btn.disabled = false;
+    if (res.error === 'exists') return formError(app, 'An account with this email already exists. Try logging in.', 'f-email');
+    Auth.sendVerification();
+    toast('Account created. Check your inbox.');
+    go('#/verify');
+  });
+}
+
+function viewLogin(app) {
+  const note = flash; flash = '';
+  app.innerHTML = `
+    <div class="narrow">
+      <div class="pagehead"><h1>Log in</h1><p>Welcome back, neighbor.</p></div>
+      ${demoBanner()}
+      ${note ? `<div class="note" role="status">${esc(note)}</div>` : ''}
+      <form class="form" id="f" novalidate>
+        <div class="field" id="f-email"><label for="email">Email</label>
+          <input id="email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false"></div>
+        <div class="field" id="f-pw"><label for="pw">Password</label>${pwInput('pw', 'current-password')}</div>
+        <p class="err" id="err" role="alert" hidden></p>
+        <button class="btn" type="submit">Log in</button>
+        <a class="center" href="#/forgot" style="font-weight:700">Forgot your password?</a>
+        <p class="muted center" style="margin:0">New here? <a href="#/signup"><b>Create an account</b></a></p>
+      </form>
+    </div>`;
+  wirePw(app);
+  $('#f').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const mail = normEmail($('#email').value), pass = $('#pw').value;
+    if (!EMAIL_RE.test(mail)) return formError(app, 'Please enter the email you signed up with.', 'f-email');
+    if (!pass) return formError(app, 'Please enter your password.', 'f-pw');
+    formError(app, '');
+    const btn = $('button[type="submit"]', app); btn.disabled = true;
+    const res = await Auth.logIn(mail, pass);
+    btn.disabled = false;
+    if (res.error) return formError(app, 'Email or password is wrong.', 'f-pw');
+    toast(`Welcome back, ${res.user.name}!`);
+    afterAuth();
+  });
+}
+
+function viewForgot(app) {
+  app.innerHTML = `
+    <div class="narrow">
+      <div class="pagehead"><h1>Reset your password</h1><p>Enter your email and we'll send a link to choose a new one.</p></div>
+      ${demoBanner()}
+      <form class="form" id="f" novalidate>
+        <div class="field" id="f-email"><label for="email">Email</label>
+          <input id="email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false"></div>
+        <p class="err" id="err" role="alert" hidden></p>
+        <button class="btn" type="submit">Send reset link</button>
+        <a class="center" href="#/login" style="font-weight:700">Back to log in</a>
+      </form>
+      <div id="after"></div>
+    </div>`;
+  $('#f').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const mail = normEmail($('#email').value);
+    if (!EMAIL_RE.test(mail)) return formError(app, 'That email address does not look right.', 'f-email');
+    formError(app, '');
+    $('#f').hidden = true;
+    $('#after').innerHTML = `
+      <div class="panel" style="margin-top:16px">
+        <b>Check your inbox</b>
+        <span class="muted" style="font-size:14px">If there is an account for ${esc(mail)}, we've sent a link to reset the password. Check your spam folder too.</span>
+      </div>
+      ${APP.demo ? `
+      <form class="form panel" id="nf" novalidate style="margin-top:12px">
+        <b>Demo step: choose a new password</b>
+        <span class="muted" style="font-size:14px">In the real app you'd get this step by clicking the link in the email.</span>
+        <div class="field" id="f-pw"><label for="pw">New password</label>${pwInput('pw', 'new-password')}</div>
+        <p class="err" id="err2" role="alert" hidden></p>
+        <button class="btn" type="submit">Save new password</button>
+      </form>` : ''}`;
+    wirePw(app);
+    $('#nf')?.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const showErr = (m) => { const x = $('#err2'); x.textContent = m; x.hidden = !m; };
+      const bad = pwProblem($('#pw').value);
+      if (bad) return showErr(bad);
+      const res = await Auth.resetPassword(mail, $('#pw').value);
+      if (res.error) return showErr('There is no demo account with this email.');
+      toast('Password changed. Please log in.');
+      go('#/login');
+    });
+  });
+}
+
+function viewVerify(app) {
+  const u = Auth.current();
+  let wait = 0, timer = null;
+  app.innerHTML = `
+    <div class="narrow done">
+      <div style="color:var(--green)">${svg('mail', 72)}</div>
+      <h1>Check your inbox</h1>
+      <p class="muted" style="margin:8px 0 0;font-size:17px">We sent a link to <b style="color:var(--ink)">${esc(u.email)}</b>. Open it to confirm your email. Check your spam folder too.</p>
+      ${demoBanner()}
+      <div style="display:grid;gap:10px;margin-top:20px">
+        ${APP.demo ? `<button class="btn" id="sim" type="button">Demo: I clicked the link in the email</button>` : ''}
+        <button class="btn ghost" id="resend" type="button">Resend email</button>
+        <button class="linkbtn" id="other" type="button" style="color:var(--green)">Wrong address? Use a different email</button>
+        <button class="linkbtn" id="vlogout" type="button">Log out</button>
+      </div>
+    </div>`;
+  $('#vlogout').addEventListener('click', logOut);
+  $('#sim')?.addEventListener('click', () => { Auth.verifyEmail(); toast('Email confirmed. One more step.'); go('#/join'); });
+  $('#resend').addEventListener('click', () => {
+    Auth.sendVerification(); toast('Sent again. Check your inbox.');
+    wait = 30; const b = $('#resend'); b.disabled = true;
+    clearInterval(timer);
+    timer = setInterval(() => {
+      wait--;
+      if (!b.isConnected) return clearInterval(timer);
+      if (wait <= 0) { clearInterval(timer); b.disabled = false; b.textContent = 'Resend email'; }
+      else b.textContent = `Resend in ${wait}s`;
+    }, 1000);
+    b.textContent = `Resend in ${wait}s`;
+  });
+  $('#other').addEventListener('click', () => {
+    if (confirm('Remove this account and start again with another email?')) { Auth.deleteAccount(); returnTo = ''; go('#/signup'); }
+  });
+}
+
+let joinFails = 0, joinLockUntil = 0;
+function viewJoin(app) {
+  const u = Auth.current(), cur = isMember(u) ? DB.building(u.buildingId) : null;
+  app.innerHTML = `
+    <div class="narrow">
+      <div class="pagehead"><h1>${cur ? 'Change building' : 'Join your building'}</h1><p>Neighborly works building by building. Enter the code a neighbor gave you.</p></div>
+      ${cur ? `<div class="note">You're in <b>${esc(cur.name)}</b>. Joining another building removes you and your posts from it.</div>` : ''}
+      ${APP.demo ? `<div class="note demo" role="note"><b>Demo:</b> try the code <b>DEMO-B</b> (or DEMO-A).</div>` : ''}
+      <form class="form" id="f" novalidate>
+        <div class="field" id="f-code"><label for="code">Building code</label>
+          <input id="code" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. K7PM-4TQ2" style="letter-spacing:.1em;font-weight:700">
+          <small>Ask a neighbor or look for it on your building's notice board.</small></div>
+        <p class="err" id="err" role="alert" hidden></p>
+        <button class="btn" type="submit">Join building</button>
+      </form>
+      <div class="panel" style="margin-top:18px">
+        <b>Your building isn't here yet?</b>
+        <span class="muted" style="font-size:14px">Create it in a minute. You'll get a code to share with your neighbors.</span>
+        <a class="btn ghost" href="#/newbuilding">Create my building</a>
+      </div>
+      <p class="center" style="margin-top:16px"><button class="linkbtn" id="out" type="button" style="color:var(--muted)">Log out</button></p>
+    </div>`;
+  $('#out').addEventListener('click', logOut);
+  $('#f').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (Date.now() < joinLockUntil) return formError(app, `Too many tries. Wait ${Math.ceil((joinLockUntil - Date.now()) / 1000)} seconds.`, 'f-code');
+    const code = $('#code').value;
+    if (normCode(code).length < 5) return formError(app, 'Please enter the full code.', 'f-code');
+    const res = Auth.joinBuilding(code);
+    if (res.error) {
+      joinFails++;
+      if (joinFails >= 5) { joinFails = 0; joinLockUntil = Date.now() + 30e3; return formError(app, 'Too many tries. Please wait 30 seconds.', 'f-code'); }
+      return formError(app, "That code doesn't match a building. Check it with your neighbor.", 'f-code');
+    }
+    joinFails = 0;
+    toast(`Welcome to ${res.building.name}!`);
+    afterAuth();
+  });
+}
+
+function viewNewBuilding(app) {
+  app.innerHTML = `
+    <div class="narrow">
+      <div class="pagehead"><h1>Create your building</h1><p>You'll be its admin and get a code to share with neighbors.</p></div>
+      <form class="form" id="f" novalidate>
+        <div class="field" id="f-name"><label for="bname">Building name</label>
+          <input id="bname" maxlength="40" placeholder="e.g. Building Y or Rosenweg 12"><small>Don't include flat numbers.</small></div>
+        <div class="two">
+          <div class="field" id="f-city"><label for="city">City (optional)</label><input id="city" maxlength="40" autocomplete="address-level2"></div>
+          <div class="field" id="f-zip"><label for="zip">Postcode (optional)</label><input id="zip" maxlength="5" inputmode="numeric" autocomplete="postal-code"></div>
+        </div>
+        <div class="field" id="f-spots"><label for="spots">Pickup spots (one per line)</label>
+          <textarea id="spots" maxlength="300" placeholder="Table by the mailboxes&#10;Lobby fridge"></textarea>
+          <small>Shared places where food can be left. You can change them later.</small></div>
+        <p class="err" id="err" role="alert" hidden></p>
+        <button class="btn" type="submit">Create building</button>
+        <a class="center" href="#/join" style="font-weight:700">Back</a>
+      </form>
+    </div>`;
+  $('#f').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = $('#bname').value.trim(), city = $('#city').value.trim(), zip = $('#zip').value.trim();
+    const spots = [...new Set($('#spots').value.split('\n').map((s) => s.trim()).filter(Boolean))];
+    if (name.length < 2) return formError(app, 'Please give your building a name.', 'f-name');
+    if (zip && !/^\d{4,5}$/.test(zip)) return formError(app, 'A postcode has 4 or 5 digits.', 'f-zip');
+    if (!spots.length) return formError(app, 'Add at least one pickup spot.', 'f-spots');
+    if (spots.length > 8 || spots.some((s) => s.length > 40)) return formError(app, 'Use up to 8 spots, each under 40 characters.', 'f-spots');
+    const b = Auth.createBuilding({ name, city, postcode: zip, spots });
+    if (!b) return formError(app, 'Something went wrong. Please try again.');
+    go('#/buildingready');
+  });
+}
+
+function viewBuildingReady(app) {
+  const u = Auth.current(), b = DB.building(u.buildingId);
+  const link = location.origin + location.pathname;
+  const msg = `Join ${b.name} on Neighborly to share and find free food. Use this code after you sign up: ${b.code} ${link}`;
+  app.innerHTML = `
+    <div class="narrow done">
+      <div style="color:var(--green)">${svg('home2', 72)}</div>
+      <h1>${esc(b.name)} is ready!</h1>
+      <p class="muted" style="margin:8px 0 14px;font-size:17px">Share this code with your neighbors. They'll need it to join.</p>
+      <div class="codebox" id="codebox" aria-label="Building code">${esc(b.code)}</div>
+      <div style="display:grid;gap:10px;margin-top:16px">
+        <button class="btn" id="copy" type="button">Copy code</button>
+        <a class="btn ghost" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">${svg('wa', 18)} Share via WhatsApp</a>
+        <a class="btn ghost" href="#/home">Continue to Neighborly</a>
+      </div>
+      <p class="muted" style="font-size:13px;margin-top:14px">You can find the code again in your profile. If it leaks, you can make a new one there.</p>
+    </div>`;
+  $('#copy').addEventListener('click', () => copyText(b.code, 'Code copied.'));
+}
+
 function viewProfile(app) {
-  const prof = DB.profile();
-  const mine = DB.posts().filter((p) => p.mine);
-  const claims = DB.claims().filter((c) => c.status !== 'returned');
-  const sharedPortions = mine.reduce((s, p) => s + (p.total - p.left), 0);
-  const claimedPortions = claims.reduce((s, c) => s + c.portions, 0);
+  const user = Auth.current(), b = DB.building(user.buildingId), admin = b.adminId === user.id;
+  const mine = DB.posts(b.id).filter((p) => p.ownerId === user.id);
+  const claims = DB.claimsFor(user.id).filter((c) => c.status !== 'returned');
+  const sharedPortions = mine.reduce((s, p) => s + DB.claimedPortions(p.id), 0);
+  const claimedP = claims.reduce((s, c) => s + c.portions, 0);
+  const members = DB.members(b.id);
+  const link = location.origin + location.pathname;
   app.innerHTML = `
     <div class="narrow">
       <div class="profilehead">
-        <span class="av" id="av">${initial(prof.name || 'You')}</span>
+        <span class="av" id="av">${initial(user.name)}</span>
         <div style="flex:1">
-          <h1 class="serif" style="font-size:28px">${esc(prof.name || 'Your profile')}</h1>
-          <div class="muted" style="font-size:14px">${esc(prof.building || 'Add your building below')}</div>
+          <h1 class="serif" style="font-size:28px">${esc(user.name)}</h1>
+          <div class="muted" style="font-size:14px">${esc(b.name)}${admin ? ' · admin' : ''}</div>
+          <div class="muted" style="font-size:13px">${esc(user.email || '')}</div>
         </div>
       </div>
       <section class="impact">
@@ -832,42 +1637,98 @@ function viewProfile(app) {
         <div class="stats">
           <div><b>${mine.length}</b><span>foods shared</span></div>
           <div><b>${claims.length}</b><span>foods claimed</span></div>
-          <div><b>${sharedPortions + claimedPortions}</b><span>portions saved from the bin</span></div>
+          <div><b>${sharedPortions + claimedP}</b><span>portions saved from the bin</span></div>
         </div>
       </section>
       <form class="form" id="pf">
-        <div class="field"><label for="pname">First name</label><input id="pname" maxlength="30" value="${esc(prof.name)}" placeholder="Shown on food you share"></div>
-        <div class="field"><label for="pbld">Building or street</label><input id="pbld" maxlength="50" value="${esc(prof.building)}" placeholder="e.g. Building B"></div>
+        <div class="field"><label for="pname">First name</label><input id="pname" maxlength="30" value="${esc(user.name)}" placeholder="Shown on food you share"></div>
         <fieldset class="field"><legend>My allergies</legend>
-          <small style="margin-bottom:8px">We'll warn you on food that contains these.</small>
-          <div class="chips" id="alg">${WARN_TAGS.map((t) => `<button type="button" class="chip warn" data-t="${t}" aria-pressed="${(prof.allergies || []).includes(t)}">${t}</button>`).join('')}</div>
+          <small style="margin-bottom:8px">We'll warn you on food that contains these, and "Safe for me" in Discover hides them.</small>
+          <div class="chips" id="alg">${WARN_TAGS.map((t) => `<button type="button" class="chip warn" data-t="${t}" aria-pressed="${(user.allergies || []).includes(t)}">${t}</button>`).join('')}</div>
         </fieldset>
         <button class="btn" type="submit">Save profile</button>
       </form>
-      <div class="alertcard">${svg('bell', 26, 'style="color:#CFE3BF;flex-shrink:0"')}<div><b>Alerts for new food</b><small>Coming in the next version.</small></div></div>
+
+      <section class="panel" style="margin-top:16px" aria-labelledby="bh">
+        <h2 id="bh" style="font-size:16px">My building: ${esc(b.name)}</h2>
+        <div class="muted" style="font-size:14px">${esc([b.postcode, b.city].filter(Boolean).join(' '))}${b.postcode || b.city ? ' · ' : ''}${members.length} ${members.length === 1 ? 'member' : 'members'}</div>
+        <div><div class="muted" style="font-size:13px;font-weight:700;margin-bottom:6px">Building code (share it with neighbors)</div>
+          <div class="codebox" style="font-size:26px;padding:12px">${esc(b.code)}</div></div>
+        <div class="stack2" style="display:grid;gap:10px">
+          <button class="btn ghost sm" id="copycode" type="button">Copy code</button>
+          <a class="btn ghost sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(`Join ${b.name} on Neighborly. Code after sign-up: ${b.code} ${link}`)}">${svg('wa', 16)} Share via WhatsApp</a>
+        </div>
+        <details><summary style="cursor:pointer;font-weight:700;padding:6px 0">Members and pickup spots</summary>
+          <ul class="members" style="margin-top:8px">${members.map((m) => `<li><span class="av">${initial(m.name)}</span><span style="flex:1">${esc(m.name)}${m.id === b.adminId ? ' (admin)' : ''}${m.id === user.id ? ' (you)' : ''}</span>${admin && m.id !== user.id ? `<button type="button" class="linkbtn" data-remove="${m.id}">Remove</button>` : ''}</li>`).join('')}</ul>
+          <p class="muted" style="font-size:14px;margin:12px 0 4px"><b>Pickup spots:</b> ${b.spots.map(esc).join(' · ')}</p>
+          ${admin ? `<form id="spotsf" class="form" style="margin-top:8px"><div class="field"><label for="spots">Edit pickup spots (one per line)</label><textarea id="spots" maxlength="300">${esc(b.spots.join('\n'))}</textarea></div><p class="err" id="err" role="alert" hidden></p><button class="btn ghost sm" type="submit">Save spots</button></form>` : ''}
+        </details>
+        <div class="stack2" style="display:grid;gap:10px">
+          ${admin ? `<button class="btn danger sm" id="newcode" type="button">Make a new code</button>` : ''}
+          <button class="btn danger sm" id="leave" type="button">Leave building</button>
+        </div>
+      </section>
+
+      <div class="alertcard">${svg('bell', 26, 'style="color:#CFE3BF;flex-shrink:0"')}<div><b>Alerts for new food <span class="badge" style="margin-left:4px">Soon</span></b><small>Coming in a later version.</small></div></div>
       <div class="panel" style="margin-top:16px">
-        <b>About this version</b>
-        <p class="muted" style="margin:0;font-size:14px">This is version 1. Posts are saved on this device only, and the sample posts show how the app works. Version 2 will connect a shared database so all neighbors see the same feed.</p>
-        <button class="btn danger sm" id="reset" type="button">Reset demo data</button>
+        <b>Your account</b>
+        <div class="stack2" style="display:grid;gap:10px">
+          <button class="btn dark sm" id="logout" type="button">Log out</button>
+          <button class="btn danger sm" id="delacc" type="button">Delete my account</button>
+        </div>
       </div>
+      ${APP.demo ? `<div class="panel" style="margin-top:16px">
+        <b>About this version</b>
+        <p class="muted" style="margin:0;font-size:14px">This is a demo. Accounts, buildings and posts are saved on this device only, and the sample neighbors show how the app works. The next version connects a shared database so everyone sees the same feed.</p>
+        <button class="btn danger sm" id="reset" type="button">Reset all demo data</button>
+      </div>` : ''}
     </div>`;
-  const allergies = new Set(prof.allergies || []);
+  const allergies = new Set(user.allergies || []);
   $('#alg').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-t]'); if (!b) return;
-    const t = b.dataset.t; allergies.has(t) ? allergies.delete(t) : allergies.add(t);
-    b.setAttribute('aria-pressed', allergies.has(t));
+    const bt = e.target.closest('[data-t]'); if (!bt) return;
+    const t = bt.dataset.t; allergies.has(t) ? allergies.delete(t) : allergies.add(t);
+    bt.setAttribute('aria-pressed', allergies.has(t));
   });
   $('#pf').addEventListener('submit', (e) => {
     e.preventDefault();
-    DB.setProfile({ name: $('#pname').value.trim(), building: $('#pbld').value.trim(), allergies: [...allergies] });
-    toast('Profile saved'); render();
+    const name = $('#pname').value.trim();
+    if (!name) { toast('Please add your first name.'); return; }
+    Auth.setProfile({ name, allergies: [...allergies] });
+    toast('Profile saved'); render({ keepScroll: true });
   });
-  $('#reset').addEventListener('click', () => {
-    if (confirm('Reset everything back to the sample posts?')) { DB.reset(); toast('Demo data reset'); location.hash = '#/home'; render(); }
+  $('#copycode').addEventListener('click', () => copyText(b.code, 'Code copied.'));
+  $('#newcode')?.addEventListener('click', () => {
+    if (confirm('Make a new code? The old code stops working for new neighbors.')) { DB.regenerateCode(b.id); toast('New code ready.'); render({ keepScroll: true }); }
+  });
+  $$('[data-remove]').forEach((bt) => bt.addEventListener('click', () => {
+    if (confirm('Remove this neighbor from the building? Their posts are removed too.')) { DB.removeMember(user.id, bt.dataset.remove); toast('Neighbor removed.'); render({ keepScroll: true }); }
+  }));
+  $('#spotsf')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const spots = [...new Set($('#spots').value.split('\n').map((s) => s.trim()).filter(Boolean))];
+    const err = $('#err');
+    if (!spots.length || spots.length > 8 || spots.some((s) => s.length > 40)) { err.textContent = 'Use 1 to 8 spots, each under 40 characters.'; err.hidden = false; return; }
+    DB.setSpots(b.id, spots); toast('Pickup spots saved.'); render({ keepScroll: true });
+  });
+  $('#leave').addEventListener('click', () => {
+    if (confirm('Leave this building? Your posts and claims here are removed.')) { Auth.leaveBuilding(); toast('You left the building.'); go('#/join'); }
+  });
+  $('#logout').addEventListener('click', logOut);
+  $('#delacc').addEventListener('click', () => {
+    if (confirm('Delete your account for good? Your posts and claims are removed.')) { Auth.deleteAccount(); toast('Account deleted.'); go('#/home'); }
+  });
+  $('#reset')?.addEventListener('click', () => {
+    if (confirm('Reset everything on this device back to the sample data? This removes all demo accounts and posts.')) { DB.reset(); toast('Demo data reset.'); go('#/home'); }
   });
 }
 
-$('#bell').addEventListener('click', () => toast('Alerts are coming in the next version.'));
+/* =====================================================================
+   START
+   ===================================================================== */
+$('#bell').addEventListener('click', () => toast('Alerts are coming in a later version.'));
+if (!persistOK) {
+  $('#app').insertAdjacentHTML('beforebegin', `<div class="note demo" style="max-width:1088px;margin:8px auto 0" role="alert">Your browser blocks saving, so nothing you do will be kept after you close this page.</div>`);
+}
 render();
 </script>
 </body>
