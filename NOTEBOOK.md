@@ -1,6 +1,6 @@
 # Class Notebook: Neighborly
 
-Akshit · Matriculation no. 21411674
+Akshit Rohilla
 
 ## Entry: Neighbor food sharing (version 1)
 
