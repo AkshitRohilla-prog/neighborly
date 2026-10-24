@@ -7,6 +7,7 @@
 <meta name="description" content="Share extra food with your neighbors before it goes to waste.">
 <meta name="theme-color" content="#2E6B3F">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%232E6B3F' d='M20 4C11 4 5 8.5 5 15c0 1.6.4 3 1 4.2C7.5 14 11 10.5 15 9c-3.4 2.2-6 5.4-7.4 10.4.9.4 2 .6 3.1.6C17 20 20 13 20 4z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&family=Anton&display=swap" rel="stylesheet">
@@ -329,7 +330,7 @@ function toast(msg, action) {
    Firebase calls (Authentication + Firestore) and set APP.demo = false.
    The screens do not need to change.
    ===================================================================== */
-const APP = { demo: true };
+const APP = { demo: false };
 const STORAGE_KEY = 'neighborly-v2';
 const DEMO_BUILDING = 'b-demo-b';
 
@@ -477,7 +478,7 @@ function detachFromBuilding(u) {
 
 const claimedPortions = (postId) => state.claims.filter((c) => c.postId === postId && c.status !== 'returned').reduce((s, c) => s + c.portions, 0);
 
-const Auth = {
+const DemoAuth = {
   current() { return state.session ? state.users.find((u) => u.id === state.session) || null : null; },
   async signUp({ name, email, password }) {
     email = normEmail(email);
@@ -495,15 +496,16 @@ const Auth = {
     return { user: u };
   },
   logOut() { state.session = null; save(); },
-  sendVerification() { return true; },            // version 2: Firebase sendEmailVerification()
-  verifyEmail() { const u = this.current(); if (u) { u.verified = true; save(); } },   // demo only: the "click the link" step
+  sendVerification() { return { ok: true }; },            // version 2: Firebase sendEmailVerification()
+  verifyEmail() { const u = this.current(); if (u) { u.verified = true; save(); } },
+  checkVerified() { const u = this.current(); return !!(u && u.verified); },   // demo only: the "click the link" step
   async resetPassword(email, password) {          // version 2: Firebase sendPasswordResetEmail()
     const u = state.users.find((x) => x.email && x.email === normEmail(email));
     if (!u) return { error: 'none' };
     u.salt = newId(); u.hash = await hashPassword(password, u.salt); save();
     return { ok: true };
   },
-  setProfile(changes) { const u = this.current(); if (u) { Object.assign(u, changes); save(); } },
+  setProfile(changes) { const u = this.current(); if (u) { Object.assign(u, changes); save(); } return true; },
   joinBuilding(code) {
     const u = this.current(); if (!u) return { error: 'login' };
     const b = state.buildings.find((x) => normCode(x.code) === normCode(code));
@@ -519,16 +521,17 @@ const Auth = {
     state.buildings.push(b); u.buildingId = b.id; save();
     return b;
   },
-  leaveBuilding() { const u = this.current(); if (u) { detachFromBuilding(u); save(); } },
+  leaveBuilding() { const u = this.current(); if (u) { detachFromBuilding(u); save(); } return true; },
   deleteAccount() {
     const u = this.current(); if (!u) return;
     detachFromBuilding(u);
     state.users = state.users.filter((x) => x.id !== u.id);
     state.session = null; save();
+    return { ok: true };
   }
 };
 
-const DB = {
+const DemoDB = {
   user: (id) => state.users.find((u) => u.id === id) || null,
   building: (id) => state.buildings.find((b) => b.id === id) || null,
   members: (bid) => state.users.filter((u) => u.buildingId === bid),
@@ -537,7 +540,7 @@ const DB = {
     let code; do { code = makeCode(); } while (state.buildings.some((x) => normCode(x.code) === normCode(code)));
     b.code = code; save(); return code;
   },
-  setSpots(bid, spots) { const b = this.building(bid); if (b) { b.spots = spots; save(); } },
+  setSpots(bid, spots) { const b = this.building(bid); if (b) { b.spots = spots; save(); } return true; },
   removeMember(adminId, userId) {
     const u = this.user(userId), b = u && this.building(u.buildingId);
     if (!u || !b || b.adminId !== adminId || userId === adminId) return false;
@@ -554,11 +557,11 @@ const DB = {
     if (!save()) { state.posts.shift(); return null; }
     return p;
   },
-  updatePost(id, changes) { const p = this.post(id); if (p) { Object.assign(p, changes); save(); } },
+  updatePost(id, changes) { const p = this.post(id); if (p) { Object.assign(p, changes); save(); } return true; },
   deletePost(id) {
     state.posts = state.posts.filter((p) => p.id !== id);
     state.claims = state.claims.filter((c) => c.postId !== id);
-    save();
+    save(); return true;
   },
 
   claimedPortions,
@@ -575,20 +578,626 @@ const DB = {
     return c;
   },
   setClaimStatus(id, status) {
-    const c = this.claim(id); if (!c) return;
+    const c = this.claim(id); if (!c) return false;
     if (status === 'returned' && c.status === 'ready') {
       const p = this.post(c.postId); if (p) p.left = Math.min(p.total, p.left + c.portions);
     }
-    c.status = status; save();
+    c.status = status; save(); return true;
   },
 
   addReport(postId, userId, reason, text) {
-    state.reports.push({ id: newId(), postId, userId, reason, text, at: Date.now() }); save();
+    state.reports.push({ id: newId(), postId, userId, reason, text, at: Date.now() }); save(); return true;
   },
   reset() { state = seed(); save(); }
 };
 
-loadState();
+/* =====================================================================
+   FIREBASE BACKEND (version 2: shared, real accounts)
+   ---------------------------------------------------------------------
+   Same shape as the demo backend (Auth and DB), so the screens did not
+   change. The page keeps a small in-memory copy (`state`) that live
+   Firestore listeners keep up to date, so reading is instant and every
+   write goes to Firestore.
+
+   Firestore layout (see firestore.rules):
+     users/{uid}       first name, buildingId, joinCode      (visible to the building)
+     profiles/{uid}    allergies                             (private to the person)
+     buildings/{id}    name, city, spots, code, adminId      (members only)
+     codes/{CODE}      buildingId                            (lookup by code, no listing)
+     posts/{id}        food posts                            (building members only)
+     claims/{id}       who claimed how much                  (claimer and giver only)
+     reports/{id}      "Report this post"                    (write only)
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyASVH5jw_IJmjzYcJXF39tbt6R2k5wCQeE',
+  authDomain: 'neighborly-528d2.firebaseapp.com',
+  projectId: 'neighborly-528d2',
+  storageBucket: 'neighborly-528d2.firebasestorage.app',
+  messagingSenderId: '306900574938',
+  appId: '1:306900574938:web:b83fe86472f278061c3be3'
+};
+const FB_VERSION = '10.14.1';
+const fbUrl = (m) => `https://www.gstatic.com/firebasejs/${FB_VERSION}/firebase-${m}.js`;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const withTimeout = (p, ms = 15000) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error('timeout'), { code: 'app/timeout' })), ms))]);
+const deferred = () => { let resolve; const promise = new Promise((r) => { resolve = r; }); return { promise, resolve }; };
+async function waitFor(fn, ms = 8000) {
+  const end = Date.now() + ms;
+  for (;;) { const v = fn(); if (v) return v; if (Date.now() > end) return null; await sleep(40); }
+}
+
+/* The Firebase code is only downloaded when it is needed: Auth first, Firestore once somebody is signed in. */
+let fb = null, fbAuthP = null, fbDbP = null;
+function fbLoadAuth() {
+  if (!fbAuthP) {
+    fbAuthP = Promise.all([import(fbUrl('app')), import(fbUrl('auth'))]).then(([a, A]) => {
+      const app = a.initializeApp(FIREBASE_CONFIG);
+      fb = { app, A, auth: A.getAuth(app) };
+      return fb;
+    }).catch((e) => { fbAuthP = null; throw Object.assign(new Error('load failed'), { code: 'network-load-failed', cause: e }); });
+  }
+  return fbAuthP;
+}
+function fbLoadDb() {
+  if (!fbDbP) {
+    fbDbP = fbLoadAuth().then((f) => import(fbUrl('firestore')).then((F) => {
+      f.F = F; f.db = F.initializeFirestore(f.app, { ignoreUndefinedProperties: true });
+      return f;
+    })).catch((e) => { fbDbP = null; throw e && e.code === 'network-load-failed' ? e : Object.assign(new Error('load failed'), { code: 'network-load-failed', cause: e }); });
+  }
+  return fbDbP;
+}
+
+function fbMessage(e) {
+  const c = (e && e.code) || '';
+  if (c === 'permission-denied') return "That isn't allowed. Check that your email is confirmed and that you are in this building.";
+  if (/network|unavailable|timeout/.test(c) || (e && e.message === 'timeout')) return 'No connection. Please check your internet and try again.';
+  if (c === 'auth/too-many-requests') return 'Too many tries. Please wait a few minutes and try again.';
+  if (c === 'auth/requires-recent-login') return 'For your safety, please log in again and then repeat this.';
+  return 'Something went wrong. Please try again.';
+}
+function authError(e) {
+  const c = (e && e.code) || '';
+  if (c === 'auth/email-already-in-use') return { error: 'exists' };
+  if (['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found', 'auth/invalid-login-credentials'].includes(c)) return { error: 'bad' };
+  if (c === 'auth/weak-password') return { error: 'fail', message: 'That password is too easy to guess. Try a longer one.' };
+  if (c === 'auth/invalid-email') return { error: 'fail', message: 'That email address does not look right.' };
+  if (c === 'auth/user-disabled') return { error: 'fail', message: 'This account has been disabled.' };
+  return { error: 'fail', message: fbMessage(e) };
+}
+
+/* ---------- the live copy of the data ---------- */
+const live = { userDoc: null, allergies: [], building: null, members: [], posts: [], claimsMine: [], claimsOwned: [] };
+let fbUser = null, booted = false, signingUp = false, deleting = false, profileFixing = false;
+let attachToken = 0, buildingToken = 0, liveBuildingId = null, settled = null, fbError = null, previewData = null;
+const sessUnsubs = [], bldUnsubs = [];
+const unsubAll = (arr) => { arr.splice(0).forEach((f) => { try { f(); } catch (e) { /* already closed */ } }); };
+function resetLive() {
+  Object.assign(live, { userDoc: null, allergies: [], building: null, members: [], posts: [], claimsMine: [], claimsOwned: [] });
+  liveBuildingId = null;
+}
+
+function initFbState() {
+  state = { session: null, users: [], buildings: [], posts: [], claims: [], reports: [] };
+  const s = seed();   // the sample building guests can look at. It exists only in the page, never in the database.
+  previewData = {
+    users: s.users.filter((u) => u.buildingId === DEMO_BUILDING),
+    buildings: [{ ...s.buildings[0], name: 'Sample building', code: '', preview: true }],
+    posts: s.posts.filter((p) => p.buildingId === DEMO_BUILDING).map((p, i) => ({ ...p, id: 'preview-' + i }))
+  };
+  composeState();
+}
+
+function composeState() {
+  const meDoc = live.userDoc;
+  const me = fbUser ? {
+    id: fbUser.uid, name: (meDoc && meDoc.name) || fbUser.displayName || '', email: fbUser.email || '',
+    verified: !!fbUser.emailVerified, buildingId: (meDoc && meDoc.buildingId) || null,
+    allergies: live.allergies || [], createdAt: (meDoc && meDoc.createdAt) || 0
+  } : null;
+  state.session = me ? me.id : null;
+  state.users = [...previewData.users, ...(me ? [me] : []), ...live.members.filter((m) => !me || m.id !== me.id)];
+  state.buildings = [...previewData.buildings, ...(live.building ? [live.building] : [])];
+  state.posts = [...previewData.posts, ...live.posts];
+  const seen = new Set();
+  state.claims = [...live.claimsMine, ...live.claimsOwned].filter((c) => !seen.has(c.id) && seen.add(c.id));
+}
+
+/* a change arrived from the server: redraw what is on screen, but never wipe a form someone is typing in */
+let lastSig = '', renderTimer = null;
+const sigOf = () => { const u = Auth.current(); return u ? [u.id, u.verified, u.buildingId, !!(u.buildingId && DB.building(u.buildingId))].join('|') : ''; };
+function scheduleRender() { if (!booted) return; clearTimeout(renderTimer); renderTimer = setTimeout(onDataChange, 60); }
+function onDataChange() {
+  if (!booted) return;
+  const [, name = 'home'] = (location.hash || '#/home').split('/');
+  const r = routes[name] || routes.home;
+  if (guard(r)) { render(); return; }
+  const formRoute = /^(share|edit|login|signup|forgot|newbuilding|join|verify)$/.test(name);
+  const typing = document.activeElement && document.activeElement.matches('input,textarea,select');
+  const changed = sigOf() !== lastSig;
+  if (changed && !formRoute && !typing) { render({ keepScroll: true }); return; }
+  if (changed) { renderNav(r.tab); return; }
+  if (formRoute || typing) return;
+  if (name === 'home' && homeRefresh) { homeRefresh(); return; }
+  render({ keepScroll: true });
+}
+
+function listenError(err, label) {
+  if (deleting) return;
+  if (err && err.code === 'permission-denied') {
+    toast(`Could not load ${label}. Please reload the page. If it keeps happening, leave and re-join the building.`);
+  }
+}
+/* Opens one live listener. Resolves after the first answer (or after 8 s), so startup never hangs. */
+function listen(unsubs, ref, onData, label, withMeta) {
+  return new Promise((resolve) => {
+    let done = false;
+    const fin = () => { if (!done) { done = true; resolve(); } };
+    try {
+      const opts = withMeta ? { includeMetadataChanges: true } : {};
+      unsubs.push(fb.F.onSnapshot(ref, opts, (snap) => { onData(snap); composeState(); fin(); scheduleRender(); }, (err) => { listenError(err, label); fin(); }));
+    } catch (e) { fin(); }
+    setTimeout(fin, 8000);
+  });
+}
+
+async function ensureProfile(user) {
+  if (profileFixing || deleting) return;
+  profileFixing = true;
+  try {
+    const { F, db } = await fbLoadDb();
+    await F.setDoc(F.doc(db, 'users', user.uid), { name: String(user.displayName || 'Neighbor').slice(0, 30), buildingId: null, joinCode: null, createdAt: Date.now() });
+  } catch (e) { /* tried; the next login tries again */ }
+  profileFixing = false;
+}
+
+async function attachBuilding(bid) {
+  if (bid === liveBuildingId) return;
+  const my = ++buildingToken;
+  unsubAll(bldUnsubs);
+  live.building = null; live.members = []; live.posts = []; liveBuildingId = bid;
+  composeState();
+  if (!bid) { scheduleRender(); return; }
+  const { F, db } = fb;
+  await Promise.all([
+    listen(bldUnsubs, F.doc(db, 'buildings', bid), (s) => { if (my === buildingToken) live.building = s.exists() ? { id: s.id, ...s.data() } : null; }, 'your building'),
+    listen(bldUnsubs, F.query(F.collection(db, 'posts'), F.where('buildingId', '==', bid), F.limit(200)),
+      (s) => { if (my === buildingToken) live.posts = s.docs.map((d) => ({ id: d.id, ...d.data() })); }, 'the food'),
+    listen(bldUnsubs, F.query(F.collection(db, 'users'), F.where('buildingId', '==', bid), F.limit(100)),
+      (s) => { if (my === buildingToken) live.members = s.docs.map((d) => ({ id: d.id, name: d.data().name, buildingId: bid, allergies: [], verified: true })); }, 'your neighbors')
+  ]);
+}
+
+async function attachSession(user) {
+  const my = ++attachToken;
+  unsubAll(sessUnsubs); unsubAll(bldUnsubs); resetLive();
+  const { F, db } = await fbLoadDb();
+  if (my !== attachToken) return;
+  let firstRun = true, firstBid = null;
+  await Promise.all([
+    listen(sessUnsubs, F.doc(db, 'users', user.uid), (snap) => {
+      if (my !== attachToken) return;
+      live.userDoc = snap.exists() ? snap.data() : null;
+      if (!snap.exists() && !signingUp) ensureProfile(user);
+      if (!snap.metadata.hasPendingWrites) {            // only follow building changes the server has confirmed
+        const bid = (live.userDoc && live.userDoc.buildingId) || null;
+        if (firstRun) { firstRun = false; firstBid = bid; } else attachBuilding(bid);
+      }
+    }, 'your account', true),
+    listen(sessUnsubs, F.doc(db, 'profiles', user.uid), (s) => { if (my === attachToken) live.allergies = s.exists() ? (s.data().allergies || []) : []; }, 'your profile'),
+    listen(sessUnsubs, F.query(F.collection(db, 'claims'), F.where('userId', '==', user.uid)),
+      (s) => { if (my === attachToken) live.claimsMine = s.docs.map((d) => ({ id: d.id, ...d.data() })); }, 'your claims'),
+    listen(sessUnsubs, F.query(F.collection(db, 'claims'), F.where('ownerId', '==', user.uid)),
+      (s) => { if (my === attachToken) live.claimsOwned = s.docs.map((d) => ({ id: d.id, ...d.data() })); }, 'claims on your food')
+  ]);
+  if (my !== attachToken) return;
+  await attachBuilding(firstBid);
+  setTimeout(pruneOld, 3000);
+}
+
+async function handleAuthChange(user) {
+  fbUser = user;
+  if (!user) {
+    attachToken++; unsubAll(sessUnsubs); unsubAll(bldUnsubs); resetLive();
+    try { localStorage.removeItem('neighborly-user'); } catch (e) { /* private mode */ }
+    composeState();
+  } else {
+    try { localStorage.setItem('neighborly-user', '1'); } catch (e) { /* private mode */ }
+    if (!user.emailVerified) {                          // they may have clicked the link in the email on another device
+      try { await user.reload(); if (user.emailVerified) await user.getIdToken(true); } catch (e) { /* offline: stay as is */ }
+    }
+    composeState();
+    try { await attachSession(user); } catch (e) { fbError = e; }
+    composeState();
+  }
+  if (settled) settled.resolve();
+  scheduleRender();
+}
+const settledWait = () => (settled ? Promise.race([settled.promise, sleep(10000)]) : Promise.resolve());
+
+/* Runs the writes in safe chunks. `last` (leaving the building) goes in the final chunk, after everything that needs membership. */
+async function commitOps(ops, last) {
+  const { F, db } = await fbLoadDb();
+  const chunks = [];
+  for (let i = 0; i < ops.length; i += 400) chunks.push(ops.slice(i, i + 400));
+  chunks.push(last || []);
+  for (const ch of chunks) {
+    if (!ch.length) continue;
+    const bt = F.writeBatch(db);
+    ch.forEach((op) => op(bt));
+    await withTimeout(bt.commit());
+  }
+}
+
+/* Everything a person leaves behind when they leave a building. */
+async function fbLeave(u) {
+  const { F, db } = await fbLoadDb();
+  const bid = u.buildingId; if (!bid) return;
+  const b = DB.building(bid);
+  const mine = state.posts.filter((p) => p.ownerId === u.id && p.buildingId === bid);
+  const mineIds = new Set(mine.map((p) => p.id));
+  const ops = [];
+  state.claims.filter((c) => mineIds.has(c.postId)).forEach((c) => ops.push((bt) => bt.delete(F.doc(db, 'claims', c.id))));
+  mine.forEach((p) => ops.push((bt) => bt.delete(F.doc(db, 'posts', p.id))));
+  state.claims.filter((c) => c.userId === u.id && !mineIds.has(c.postId)).forEach((c) => {
+    if (c.status === 'ready' && state.posts.some((p) => p.id === c.postId)) ops.push((bt) => bt.update(F.doc(db, 'posts', c.postId), { left: F.increment(c.portions) }));
+    ops.push((bt) => bt.delete(F.doc(db, 'claims', c.id)));
+  });
+  const last = [];
+  if (b && b.adminId === u.id) {
+    const next = DB.members(bid).find((m) => m.id !== u.id);
+    if (next) last.push((bt) => bt.update(F.doc(db, 'buildings', bid), { adminId: next.id }));
+    else {                                              // the last person leaves: the building disappears
+      last.push((bt) => bt.delete(F.doc(db, 'buildings', bid)));
+      last.push((bt) => bt.delete(F.doc(db, 'codes', normCode(b.code))));
+    }
+  }
+  last.push((bt) => bt.update(F.doc(db, 'users', u.id), { buildingId: null, joinCode: null }));
+  await commitOps(ops, last);
+  await waitFor(() => !(Auth.current() || {}).buildingId, 5000);
+}
+
+/* tidy up my own old food (3+ days past its end) and claims whose food no longer exists */
+async function pruneOld() {
+  try {
+    const u = Auth.current(); if (!u || !isMember(u) || deleting) return;
+    const { F, db } = await fbLoadDb();
+    const old = Date.now() - 3 * 24 * HOUR;
+    const gone = live.posts.filter((p) => p.ownerId === u.id && p.until < old);
+    const goneIds = new Set(gone.map((p) => p.id));
+    const orphans = live.posts.length < 200 ? live.claimsMine.filter((c) => !live.posts.some((p) => p.id === c.postId)) : [];
+    const ops = [];
+    gone.forEach((p) => ops.push((bt) => bt.delete(F.doc(db, 'posts', p.id))));
+    live.claimsOwned.filter((c) => goneIds.has(c.postId)).forEach((c) => ops.push((bt) => bt.delete(F.doc(db, 'claims', c.id))));
+    orphans.forEach((c) => ops.push((bt) => bt.delete(F.doc(db, 'claims', c.id))));
+    if (ops.length) await commitOps(ops, []);
+  } catch (e) { /* best effort */ }
+}
+
+const upsert = (arr, item) => { const i = arr.findIndex((x) => x.id === item.id); if (i >= 0) arr[i] = { ...arr[i], ...item }; else arr.unshift(item); };
+
+/* ---------- Auth ---------- */
+const FbAuth = {
+  current() { return state.session ? state.users.find((u) => u.id === state.session) || null : null; },
+
+  async signUp({ name, email, password }) {
+    let created = false;
+    try {
+      const f = await fbLoadDb();
+      settled = deferred(); signingUp = true;
+      const cred = await withTimeout(f.A.createUserWithEmailAndPassword(f.auth, email, password));
+      created = true;
+      try { await f.A.updateProfile(cred.user, { displayName: name }); } catch (e) { /* the name is also saved below */ }
+      await withTimeout(Promise.all([
+        f.F.setDoc(f.F.doc(f.db, 'users', cred.user.uid), { name, buildingId: null, joinCode: null, createdAt: Date.now() }),
+        f.F.setDoc(f.F.doc(f.db, 'profiles', cred.user.uid), { allergies: [] })
+      ]));
+      signingUp = false;
+      await settledWait();
+      return { user: this.current() };
+    } catch (e) {
+      signingUp = false;
+      if (created) { ensureProfile(fb.auth.currentUser); return { user: this.current() }; }
+      return authError(e);
+    }
+  },
+
+  async logIn(email, password) {
+    try {
+      const f = await fbLoadAuth();
+      settled = deferred();
+      await withTimeout(f.A.signInWithEmailAndPassword(f.auth, email, password));
+      await settledWait();
+      const u = this.current();
+      return u ? { user: u } : { error: 'fail', message: 'Logged in, but your account could not be loaded. Please reload the page.' };
+    } catch (e) { return authError(e); }
+  },
+
+  async logOut() {
+    try { const f = await fbLoadAuth(); await withTimeout(f.A.signOut(f.auth), 8000); } catch (e) { /* signed out locally anyway */ }
+    attachToken++; unsubAll(sessUnsubs); unsubAll(bldUnsubs); resetLive(); fbUser = null;
+    try { localStorage.removeItem('neighborly-user'); } catch (e) { /* private mode */ }
+    composeState();
+  },
+
+  async sendVerification() {
+    try {
+      const f = await fbLoadAuth(); const u = f.auth.currentUser;
+      if (!u) return { error: 'fail', message: 'Please log in again.' };
+      try { await withTimeout(f.A.sendEmailVerification(u, { url: location.origin + location.pathname })); }
+      catch (e) { if (e && e.code === 'auth/too-many-requests') throw e; await withTimeout(f.A.sendEmailVerification(u)); }
+      return { ok: true };
+    } catch (e) { return { error: 'fail', message: fbMessage(e) }; }
+  },
+
+  async checkVerified() {
+    try {
+      const f = await fbLoadAuth(); const u = f.auth.currentUser; if (!u) return false;
+      await withTimeout(u.reload());
+      if (u.emailVerified) { await withTimeout(u.getIdToken(true)); fbUser = u; composeState(); scheduleRender(); }
+      return !!u.emailVerified;
+    } catch (e) { return false; }
+  },
+
+  async sendReset(email) {
+    try {
+      const f = await fbLoadAuth();
+      try { await withTimeout(f.A.sendPasswordResetEmail(f.auth, email, { url: location.origin + location.pathname })); }
+      catch (e) { if (e && (e.code === 'auth/unauthorized-continue-uri' || e.code === 'auth/invalid-continue-uri')) await withTimeout(f.A.sendPasswordResetEmail(f.auth, email)); else throw e; }
+      return { ok: true };
+    } catch (e) {
+      if (e && e.code === 'auth/user-not-found') return { ok: true };   // never reveal which emails have an account
+      return { error: 'fail', message: fbMessage(e) };
+    }
+  },
+
+  async setProfile(changes) {
+    const u = this.current(); if (!u) return false;
+    try {
+      const { F, db } = await fbLoadDb();
+      const jobs = [];
+      if ('name' in changes) jobs.push(F.updateDoc(F.doc(db, 'users', u.id), { name: String(changes.name).slice(0, 30) }));
+      if ('allergies' in changes) jobs.push(F.setDoc(F.doc(db, 'profiles', u.id), { allergies: changes.allergies }));
+      await withTimeout(Promise.all(jobs));
+      if ('name' in changes && live.userDoc) live.userDoc.name = String(changes.name).slice(0, 30);
+      if ('allergies' in changes) live.allergies = changes.allergies;
+      composeState();
+      return true;
+    } catch (e) { toast(fbMessage(e)); return false; }
+  },
+
+  async joinBuilding(code) {
+    const u = this.current(); if (!u) return { error: 'login' };
+    try {
+      const { F, db } = await fbLoadDb();
+      const id = normCode(code);
+      const snap = await withTimeout(F.getDoc(F.doc(db, 'codes', id)));
+      if (!snap.exists()) return { error: 'nocode' };
+      const bid = snap.data().buildingId;
+      if (u.buildingId === bid && DB.building(bid)) return { building: DB.building(bid) };
+      if (u.buildingId) await fbLeave(u);
+      await withTimeout(F.updateDoc(F.doc(db, 'users', u.id), { buildingId: bid, joinCode: id }));
+      const b = await waitFor(() => DB.building(bid));
+      if (!b) return { error: 'fail', message: 'You joined, but the building could not be loaded. Please reload the page.' };
+      return { building: b };
+    } catch (e) { return { error: 'fail', message: fbMessage(e) }; }
+  },
+
+  async createBuilding({ name, city, postcode, spots }) {
+    const u = this.current(); if (!u) return null;
+    try {
+      const { F, db } = await fbLoadDb();
+      if (u.buildingId) await fbLeave(u);
+      for (let i = 0; i < 4; i++) {
+        const bref = F.doc(F.collection(db, 'buildings')), code = makeCode();
+        const bt = F.writeBatch(db);
+        bt.set(bref, { name, city, postcode, code, adminId: u.id, spots, createdAt: Date.now() });
+        bt.set(F.doc(db, 'codes', normCode(code)), { buildingId: bref.id, createdBy: u.id });
+        bt.update(F.doc(db, 'users', u.id), { buildingId: bref.id, joinCode: null });
+        try { await withTimeout(bt.commit()); }
+        catch (e) { if (e && e.code === 'permission-denied' && i < 3) continue; throw e; }   // a code clash looks like permission-denied: try another
+        return (await waitFor(() => DB.building(bref.id))) || null;
+      }
+      return null;
+    } catch (e) { toast(fbMessage(e)); return null; }
+  },
+
+  async leaveBuilding() {
+    const u = this.current(); if (!u) return false;
+    try { await fbLeave(u); return true; } catch (e) { toast(fbMessage(e)); return false; }
+  },
+
+  async deleteAccount(password) {
+    const u = this.current(); if (!u) return { ok: true };
+    try {
+      const f = await fbLoadDb(); const cu = f.auth.currentUser;
+      if (password) await f.A.reauthenticateWithCredential(cu, f.A.EmailAuthProvider.credential(cu.email, password));
+      else {
+        const last = cu.metadata && cu.metadata.lastSignInTime ? Date.parse(cu.metadata.lastSignInTime) : 0;
+        if (Date.now() - last > 4 * MIN) return { error: 'reauth' };      // Firebase wants a recent login for this
+      }
+      deleting = true;
+      await fbLeave(u);
+      attachToken++; unsubAll(sessUnsubs); unsubAll(bldUnsubs);
+      const bt = f.F.writeBatch(f.db);
+      bt.delete(f.F.doc(f.db, 'profiles', u.id)); bt.delete(f.F.doc(f.db, 'users', u.id));
+      await withTimeout(bt.commit());
+      await f.A.deleteUser(cu);
+      resetLive(); fbUser = null; composeState();
+      try { localStorage.removeItem('neighborly-user'); } catch (e) { /* private mode */ }
+      deleting = false;
+      return { ok: true };
+    } catch (e) {
+      deleting = false;
+      const c = (e && e.code) || '';
+      if (c === 'auth/requires-recent-login') return { error: 'reauth' };
+      if (c === 'auth/wrong-password' || c === 'auth/invalid-credential') return { error: 'badpw' };
+      toast(fbMessage(e)); return { error: 'fail' };
+    }
+  }
+};
+
+/* ---------- Database ---------- */
+const FbDB = {
+  user: DemoDB.user, building: DemoDB.building, members: DemoDB.members, posts: DemoDB.posts, post: DemoDB.post,
+  claimedPortions, claimsFor: DemoDB.claimsFor, claim: DemoDB.claim,
+
+  async regenerateCode(bid) {
+    const b = this.building(bid), u = Auth.current(); if (!b || !u) return null;
+    try {
+      const { F, db } = await fbLoadDb();
+      for (let i = 0; i < 4; i++) {
+        const code = makeCode(), bt = F.writeBatch(db);
+        bt.delete(F.doc(db, 'codes', normCode(b.code)));
+        bt.set(F.doc(db, 'codes', normCode(code)), { buildingId: bid, createdBy: u.id });
+        bt.update(F.doc(db, 'buildings', bid), { code });
+        try { await withTimeout(bt.commit()); }
+        catch (e) { if (e && e.code === 'permission-denied' && i < 3) continue; throw e; }
+        await waitFor(() => (this.building(bid) || {}).code === code);
+        return code;
+      }
+      return null;
+    } catch (e) { toast(fbMessage(e)); return null; }
+  },
+  async setSpots(bid, spots) {
+    try {
+      const { F, db } = await fbLoadDb();
+      await withTimeout(F.updateDoc(F.doc(db, 'buildings', bid), { spots }));
+      if (live.building && live.building.id === bid) { live.building.spots = spots; composeState(); }
+      return true;
+    } catch (e) { toast(fbMessage(e)); return false; }
+  },
+  async removeMember(adminId, userId) {
+    const m = state.users.find((x) => x.id === userId), b = m && this.building(m.buildingId);
+    if (!m || !b || b.adminId !== adminId || userId === adminId) return false;
+    try {
+      const { F, db } = await fbLoadDb();
+      const ops = state.posts.filter((p) => p.ownerId === userId && p.buildingId === b.id).map((p) => (bt) => bt.delete(F.doc(db, 'posts', p.id)));
+      await commitOps(ops, [(bt) => bt.update(F.doc(db, 'users', userId), { buildingId: null, joinCode: null })]);
+      return true;
+    } catch (e) { toast(fbMessage(e)); return false; }
+  },
+
+  async addPost(user, data) {
+    if (!user || !user.buildingId) return null;
+    try {
+      const { F, db } = await fbLoadDb();
+      const ref = F.doc(F.collection(db, 'posts'));
+      const p = { ...data, buildingId: user.buildingId, ownerId: user.id, by: user.name, left: data.total, gone: false, createdAt: Date.now() };
+      await withTimeout(F.setDoc(ref, p));
+      const post = { ...p, id: ref.id };
+      upsert(live.posts, post); composeState();
+      return post;
+    } catch (e) { toast(fbMessage(e)); return null; }
+  },
+  async updatePost(id, changes) {
+    try {
+      const { F, db } = await fbLoadDb();
+      await withTimeout(F.updateDoc(F.doc(db, 'posts', id), changes));
+      const p = live.posts.find((x) => x.id === id); if (p) Object.assign(p, changes);
+      composeState();
+      return true;
+    } catch (e) { toast(fbMessage(e)); return false; }
+  },
+  async deletePost(id) {
+    try {
+      const { F, db } = await fbLoadDb();
+      const ops = [(bt) => bt.delete(F.doc(db, 'posts', id))];
+      state.claims.filter((c) => c.postId === id).forEach((c) => ops.push((bt) => bt.delete(F.doc(db, 'claims', c.id))));
+      await commitOps([], ops);
+      live.posts = live.posts.filter((p) => p.id !== id);
+      live.claimsOwned = live.claimsOwned.filter((c) => c.postId !== id);
+      composeState();
+      return true;
+    } catch (e) { toast(fbMessage(e)); return false; }
+  },
+
+  /* Safe claiming: a transaction, so two neighbors can never take the same last portion. null = not enough left, false = error. */
+  async makeClaim(postId, user, portions) {
+    const p0 = this.post(postId);
+    if (!p0 || !user || user.buildingId !== p0.buildingId || p0.ownerId === user.id) return null;
+    try {
+      const { F, db } = await fbLoadDb();
+      const pref = F.doc(db, 'posts', postId), cref = F.doc(F.collection(db, 'claims'));
+      const claim = await withTimeout(F.runTransaction(db, async (tx) => {
+        const s = await tx.get(pref);
+        if (!s.exists()) return null;
+        const p = s.data();
+        if (p.gone || p.until <= Date.now() || !(portions >= 1) || p.left < portions) return null;
+        const c = { postId, buildingId: p.buildingId, ownerId: p.ownerId, userId: user.id, portions, at: Date.now(), status: 'ready' };
+        tx.update(pref, { left: p.left - portions });
+        tx.set(cref, c);
+        return { ...c, id: cref.id, left: p.left - portions };
+      }));
+      if (!claim) return null;
+      const { left, ...c } = claim;
+      upsert(live.claimsMine, c);
+      const lp = live.posts.find((x) => x.id === postId); if (lp) lp.left = left;
+      composeState();
+      return c;
+    } catch (e) { toast(fbMessage(e)); return false; }
+  },
+  async setClaimStatus(id, status) {
+    const c = this.claim(id); if (!c) return false;
+    try {
+      const { F, db } = await fbLoadDb();
+      const cref = F.doc(db, 'claims', id), pref = F.doc(db, 'posts', c.postId);
+      let newLeft = null;
+      await withTimeout(F.runTransaction(db, async (tx) => {
+        const cs = await tx.get(cref);
+        if (!cs.exists()) return;
+        const ps = status === 'returned' && cs.data().status === 'ready' ? await tx.get(pref) : null;
+        if (ps && ps.exists()) { const p = ps.data(); newLeft = Math.min(p.total, p.left + cs.data().portions); tx.update(pref, { left: newLeft }); }
+        tx.update(cref, { status });
+      }));
+      const lc = live.claimsMine.find((x) => x.id === id); if (lc) lc.status = status;
+      const lp = live.posts.find((x) => x.id === c.postId); if (lp && newLeft !== null) lp.left = newLeft;
+      composeState();
+      return true;
+    } catch (e) { toast(fbMessage(e)); return false; }
+  },
+
+  async addReport(postId, userId, reason, text) {
+    const p = this.post(postId);
+    try {
+      const { F, db } = await fbLoadDb();
+      await withTimeout(F.setDoc(F.doc(F.collection(db, 'reports')), { postId, buildingId: p ? p.buildingId : null, userId, reason, text: String(text || '').slice(0, 200), at: Date.now() }));
+      return true;
+    } catch (e) { toast(fbMessage(e)); return false; }
+  },
+  reset() { /* demo only */ }
+};
+
+/* Starts Firebase. Returning visitors wait for their saved login (so they never see the logged-out page flash by);
+   first-time visitors see the page at once while Firebase loads in the background. */
+async function bootFirebase() {
+  let hinted = false;
+  try { hinted = !!localStorage.getItem('neighborly-user'); } catch (e) { /* private mode */ }
+  const first = deferred();
+  (async () => {
+    try {
+      const f = await fbLoadAuth();
+      f.A.onAuthStateChanged(f.auth, async (u) => { await handleAuthChange(u); first.resolve(); });
+    } catch (e) { fbError = e; first.resolve(); }
+  })();
+  if (hinted) {
+    $('#app').innerHTML = '<div class="empty" style="margin-top:24px" role="status">Loading…</div>';
+    await Promise.race([first.promise, sleep(9000)]);
+  }
+  booted = true;
+  render();
+  if (!hinted) first.promise.then(() => { if (fbError) offlineNote(); scheduleRender(); });
+  else if (fbError) offlineNote();
+}
+function offlineNote() {
+  if ($('#offline')) return;
+  $('#app').insertAdjacentHTML('beforebegin', `<div id="offline" class="note demo" style="max-width:1088px;margin:8px auto 0" role="alert">Can't reach the server right now. You can still look around the sample building, but logging in and sharing need a connection.</div>`);
+}
+
+
+const Auth = APP.demo ? DemoAuth : FbAuth;
+const DB = APP.demo ? DemoDB : FbDB;
+if (APP.demo) loadState(); else initFbState();
 
 /* =====================================================================
    VIEW HELPERS
@@ -783,6 +1392,7 @@ function render(opts = {}) {
   const redirect = guard(r);
   if (redirect) { location.replace(location.pathname + location.search + redirect); return; }
   currentRoute = routes[name] ? name : 'home';
+  lastSig = sigOf();
   homeRefresh = null;
   unmountHero();
   renderNav(r.tab);
@@ -795,7 +1405,7 @@ function render(opts = {}) {
 }
 /* Another tab changed the data: pick it up instead of overwriting it, and redraw pages that have no form. */
 window.addEventListener('storage', (e) => {
-  if (e.key !== STORAGE_KEY || !persistOK) return;
+  if (!APP.demo || e.key !== STORAGE_KEY || !persistOK) return;
   try { const n = JSON.parse(e.newValue); if (n && Array.isArray(n.users)) state = n; else return; } catch (err) { return; }
   if (!Auth.current() && /^#\/(claims|profile|share|edit|join|verify|claimed)/.test(location.hash)) { render(); return; }
   const typing = document.activeElement && document.activeElement.matches('input,textarea,select');
@@ -821,7 +1431,7 @@ setInterval(() => {
   else if (currentRoute === 'discover' && !typing) render({ keepScroll: true });
 }, 30e3);
 
-function logOut() { Auth.logOut(); returnTo = ''; flash = ''; toast('Logged out.'); go('#/home'); }
+async function logOut() { await Auth.logOut(); returnTo = ''; flash = ''; toast('Logged out.'); go('#/home'); }
 
 /* After logging in or finishing a setup step: go to the next step, or back to where the person was. */
 function afterAuth() {
@@ -1074,40 +1684,42 @@ function viewFood(app, id) {
   $('#needsignup')?.addEventListener('click', () => { returnTo = location.hash; });
   if (mine) {
     $('#gone')?.addEventListener('click', () => markGone(p.id, () => render({ keepScroll: true })));
-    $('#undogone')?.addEventListener('click', () => { DB.updatePost(p.id, { gone: false }); toast('Post is back online.'); render({ keepScroll: true }); });
-    $('#del').addEventListener('click', () => {
-      if (confirm('Delete this post?')) { DB.deletePost(p.id); toast('Post deleted'); location.hash = '#/claims'; }
+    $('#undogone')?.addEventListener('click', async () => { if (await DB.updatePost(p.id, { gone: false })) { toast('Post is back online.'); render({ keepScroll: true }); } });
+    $('#del').addEventListener('click', async () => {
+      if (confirm('Delete this post?') && await DB.deletePost(p.id)) { toast('Post deleted'); location.hash = '#/claims'; }
     });
   }
   if (member && !mine && active) {
     const out = $('#n');
     $('#less')?.addEventListener('click', () => { n = Math.max(1, n - 1); out.textContent = n; });
     $('#more')?.addEventListener('click', () => { n = Math.min(leftNow(p), n + 1); out.textContent = n; });
-    $('#claim')?.addEventListener('click', () => {
-      const claim = DB.makeClaim(p.id, u, n);
+    $('#claim')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget; btn.disabled = true;
+      const claim = await DB.makeClaim(p.id, u, n);
+      if (claim === false) { btn.disabled = false; return; }               // an error message was already shown
       if (!claim) { toast('Sorry, not enough left.'); render({ keepScroll: true }); return; }
       location.hash = '#/claimed/' + claim.id;
     });
-    $('#giveback')?.addEventListener('click', () => {
-      DB.setClaimStatus(myClaim.id, 'returned'); toast('Given back. Someone else can take it now.'); render({ keepScroll: true });
+    $('#giveback')?.addEventListener('click', async () => {
+      if (await DB.setClaimStatus(myClaim.id, 'returned')) { toast('Given back. Someone else can take it now.'); render({ keepScroll: true }); }
     });
   }
   if (member && !mine) {
     const form = $('#rep');
     $('#rep-open').addEventListener('click', () => { form.hidden = !form.hidden; if (!form.hidden) $('#rep-reason').focus(); });
     $('#rep-cancel').addEventListener('click', () => { form.hidden = true; });
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      DB.addReport(p.id, u.id, $('#rep-reason').value, $('#rep-text').value.trim());
+      if (!(await DB.addReport(p.id, u.id, $('#rep-reason').value, $('#rep-text').value.trim()))) return;
       form.hidden = true;
       toast('Thanks. We will review this post.');
     });
   }
 }
 
-function markGone(id, after) {
-  DB.updatePost(id, { gone: true });
-  toast('Marked as all gone. Thank you!', { label: 'Undo', run: () => { DB.updatePost(id, { gone: false }); toast('Post is back online.'); after(); } });
+async function markGone(id, after) {
+  if (!(await DB.updatePost(id, { gone: true }))) return;
+  toast('Marked as all gone. Thank you!', { label: 'Undo', run: async () => { await DB.updatePost(id, { gone: false }); toast('Post is back online.'); after(); } });
   after();
 }
 
@@ -1132,8 +1744,8 @@ function viewClaimed(app, id) {
         <button class="linkbtn" id="giveback">Can't make it? Give it back</button>
       </div>
     </div>`;
-  $('#giveback').addEventListener('click', () => {
-    DB.setClaimStatus(c.id, 'returned'); toast('Given back. Someone else can take it now.'); location.hash = '#/discover';
+  $('#giveback').addEventListener('click', async () => {
+    if (await DB.setClaimStatus(c.id, 'returned')) { toast('Given back. Someone else can take it now.'); location.hash = '#/discover'; }
   });
 }
 
@@ -1223,8 +1835,10 @@ function viewShare(app, editId) {
       pp.insertAdjacentHTML('afterbegin', `<img src="${photo}" alt="Chosen photo">`);
     } catch (err) { toast('That photo could not be read.'); }
   });
-  $('#f').addEventListener('submit', (e) => {
+  let sending = false;
+  $('#f').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (sending) return;
     $$('.field.bad').forEach((x) => x.classList.remove('bad'));
     const name = $('#name').value.trim(), ing = $('#ing').value.trim();
     const spot = ($('#spot').value === '__other' ? $('#spot2').value : $('#spot').value).trim();
@@ -1268,11 +1882,15 @@ function viewShare(app, editId) {
       cookedAt: made, until, spot, note: $('#note').value.trim(), photo,
       tags: [diet, ...(spicy ? ['Spicy'] : []), ...WARN_TAGS.filter((t) => chosen.has(t))]
     };
+    sending = true; const sbtn = $('button[type="submit"]', $('#f')); sbtn.disabled = true;
     if (editing) {
-      DB.updatePost(editing.id, { ...data, left: total - got });
+      const ok = await DB.updatePost(editing.id, { ...data, left: total - got });
+      sending = false; sbtn.disabled = false;
+      if (!ok) return;
       toast('Changes saved.'); location.hash = '#/food/' + editing.id; return;
     }
-    const post = DB.addPost(user, data);
+    const post = await DB.addPost(user, data);
+    sending = false; sbtn.disabled = false;
     if (!post) return;
     toast(APP.demo ? `Posted in ${b.name}. (Demo: saved on this device only.)` : `Your food is live in ${b.name}.`);
     location.hash = '#/food/' + post.id;
@@ -1322,11 +1940,11 @@ function viewClaims(app) {
       `<div class="empty">Nothing here yet.</div>`;
     $('#items').innerHTML = html;
   };
-  app.onclick = (e) => {
+  app.onclick = async (e) => {
     const t = e.target.closest('[data-tab]');
     if (t) { tab = t.dataset.tab; sessionStorageSet('claimsTab', tab); draw(); return; }
-    const pk = e.target.closest('[data-picked]'); if (pk) { DB.setClaimStatus(pk.dataset.picked, 'picked'); toast('Enjoy your food!'); draw(); return; }
-    const rt = e.target.closest('[data-return]'); if (rt) { DB.setClaimStatus(rt.dataset.return, 'returned'); toast('Given back. Someone else can take it.'); draw(); return; }
+    const pk = e.target.closest('[data-picked]'); if (pk) { if (await DB.setClaimStatus(pk.dataset.picked, 'picked')) { toast('Enjoy your food!'); draw(); } return; }
+    const rt = e.target.closest('[data-return]'); if (rt) { if (await DB.setClaimStatus(rt.dataset.return, 'returned')) { toast('Given back. Someone else can take it.'); draw(); } return; }
     const gn = e.target.closest('[data-gone]'); if (gn) markGone(gn.dataset.gone, draw);
   };
   draw();
@@ -1400,8 +2018,9 @@ function viewSignup(app) {
     const res = await Auth.signUp({ name, email: mail, password: pass });
     btn.disabled = false;
     if (res.error === 'exists') return formError(app, 'An account with this email already exists. Try logging in.', 'f-email');
-    Auth.sendVerification();
-    toast('Account created. Check your inbox.');
+    if (res.error) return formError(app, res.message || 'Something went wrong. Please try again.', 'f-email');
+    const sent = await Auth.sendVerification();
+    toast(sent && sent.error ? 'Account created. The email did not go out yet, so press "Resend email".' : 'Account created. Check your inbox.');
     go('#/verify');
   });
 }
@@ -1433,7 +2052,7 @@ function viewLogin(app) {
     const btn = $('button[type="submit"]', app); btn.disabled = true;
     const res = await Auth.logIn(mail, pass);
     btn.disabled = false;
-    if (res.error) return formError(app, 'Email or password is wrong.', 'f-pw');
+    if (res.error) return formError(app, res.error === 'fail' && res.message ? res.message : 'Email or password is wrong.', 'f-pw');
     toast(`Welcome back, ${res.user.name}!`);
     afterAuth();
   });
@@ -1453,11 +2072,17 @@ function viewForgot(app) {
       </form>
       <div id="after"></div>
     </div>`;
-  $('#f').addEventListener('submit', (e) => {
+  $('#f').addEventListener('submit', async (e) => {
     e.preventDefault();
     const mail = normEmail($('#email').value);
     if (!EMAIL_RE.test(mail)) return formError(app, 'That email address does not look right.', 'f-email');
     formError(app, '');
+    if (!APP.demo) {
+      const btn = $('button[type="submit"]', app); btn.disabled = true;
+      const r = await Auth.sendReset(mail);
+      btn.disabled = false;
+      if (r.error) return formError(app, r.message || 'Could not send the email. Please try again.', 'f-email');
+    }
     $('#f').hidden = true;
     $('#after').innerHTML = `
       <div class="panel" style="margin-top:16px">
@@ -1496,7 +2121,8 @@ function viewVerify(app) {
       <p class="muted" style="margin:8px 0 0;font-size:17px">We sent a link to <b style="color:var(--ink)">${esc(u.email)}</b>. Open it to confirm your email. Check your spam folder too.</p>
       ${demoBanner()}
       <div style="display:grid;gap:10px;margin-top:20px">
-        ${APP.demo ? `<button class="btn" id="sim" type="button">Demo: I clicked the link in the email</button>` : ''}
+        ${APP.demo ? `<button class="btn" id="sim" type="button">Demo: I clicked the link in the email</button>`
+          : `<button class="btn" id="checkv" type="button">I've confirmed my email</button>`}
         <button class="btn ghost" id="resend" type="button">Resend email</button>
         <button class="linkbtn" id="other" type="button" style="color:var(--green)">Wrong address? Use a different email</button>
         <button class="linkbtn" id="vlogout" type="button">Log out</button>
@@ -1504,8 +2130,22 @@ function viewVerify(app) {
     </div>`;
   $('#vlogout').addEventListener('click', logOut);
   $('#sim')?.addEventListener('click', () => { Auth.verifyEmail(); toast('Email confirmed. One more step.'); go('#/join'); });
-  $('#resend').addEventListener('click', () => {
-    Auth.sendVerification(); toast('Sent again. Check your inbox.');
+  /* real mode: notice the confirmation by itself (every few seconds, and when the person comes back to this tab) */
+  const check = async (manual) => {
+    if (!$('#checkv')) return;
+    if (await Auth.checkVerified()) { toast('Email confirmed. One more step.'); go('#/join'); }
+    else if (manual) toast('Not confirmed yet. Open the link in your email first.');
+  };
+  $('#checkv')?.addEventListener('click', () => check(true));
+  if (!APP.demo) {
+    const poll = setInterval(() => { if (!$('#checkv')) clearInterval(poll); else check(false); }, 4000);
+    const onVis = () => { if (!$('#checkv')) document.removeEventListener('visibilitychange', onVis); else if (!document.hidden) check(false); };
+    document.addEventListener('visibilitychange', onVis);
+  }
+  $('#resend').addEventListener('click', async () => {
+    const sent = await Auth.sendVerification();
+    if (sent && sent.error) { toast(sent.message || 'Could not send the email. Please try again later.'); return; }
+    toast('Sent again. Check your inbox.');
     wait = 30; const b = $('#resend'); b.disabled = true;
     clearInterval(timer);
     timer = setInterval(() => {
@@ -1516,9 +2156,23 @@ function viewVerify(app) {
     }, 1000);
     b.textContent = `Resend in ${wait}s`;
   });
-  $('#other').addEventListener('click', () => {
-    if (confirm('Remove this account and start again with another email?')) { Auth.deleteAccount(); returnTo = ''; go('#/signup'); }
+  $('#other').addEventListener('click', async () => {
+    if (!confirm('Remove this account and start again with another email?')) return;
+    if (!(await deleteMyAccount())) return;
+    returnTo = ''; go('#/signup');
   });
+}
+
+/* Deletes the account. Firebase may ask for the password again before it allows this. Returns true when done. */
+async function deleteMyAccount() {
+  let r = await Auth.deleteAccount();
+  if (r && r.error === 'reauth') {
+    const pw = prompt('To keep your account safe, please type your password to continue.');
+    if (!pw) return false;
+    r = await Auth.deleteAccount(pw);
+  }
+  if (r && r.error) { if (r.error === 'badpw') toast('That password is wrong.'); return false; }
+  return true;
 }
 
 let joinFails = 0, joinLockUntil = 0;
@@ -1544,12 +2198,15 @@ function viewJoin(app) {
       <p class="center" style="margin-top:16px"><button class="linkbtn" id="out" type="button" style="color:var(--muted)">Log out</button></p>
     </div>`;
   $('#out').addEventListener('click', logOut);
-  $('#f').addEventListener('submit', (e) => {
+  $('#f').addEventListener('submit', async (e) => {
     e.preventDefault();
     if (Date.now() < joinLockUntil) return formError(app, `Too many tries. Wait ${Math.ceil((joinLockUntil - Date.now()) / 1000)} seconds.`, 'f-code');
     const code = $('#code').value;
     if (normCode(code).length < 5) return formError(app, 'Please enter the full code.', 'f-code');
-    const res = Auth.joinBuilding(code);
+    const btn = $('button[type="submit"]', app); btn.disabled = true;
+    const res = await Auth.joinBuilding(code);
+    btn.disabled = false;
+    if (res.error === 'fail') return formError(app, res.message || 'Something went wrong. Please try again.', 'f-code');
     if (res.error) {
       joinFails++;
       if (joinFails >= 5) { joinFails = 0; joinLockUntil = Date.now() + 30e3; return formError(app, 'Too many tries. Please wait 30 seconds.', 'f-code'); }
@@ -1580,7 +2237,7 @@ function viewNewBuilding(app) {
         <a class="center" href="#/join" style="font-weight:700">Back</a>
       </form>
     </div>`;
-  $('#f').addEventListener('submit', (e) => {
+  $('#f').addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = $('#bname').value.trim(), city = $('#city').value.trim(), zip = $('#zip').value.trim();
     const spots = [...new Set($('#spots').value.split('\n').map((s) => s.trim()).filter(Boolean))];
@@ -1588,7 +2245,10 @@ function viewNewBuilding(app) {
     if (zip && !/^\d{4,5}$/.test(zip)) return formError(app, 'A postcode has 4 or 5 digits.', 'f-zip');
     if (!spots.length) return formError(app, 'Add at least one pickup spot.', 'f-spots');
     if (spots.length > 8 || spots.some((s) => s.length > 40)) return formError(app, 'Use up to 8 spots, each under 40 characters.', 'f-spots');
-    const b = Auth.createBuilding({ name, city, postcode: zip, spots });
+    formError(app, '');
+    const btn = $('button[type="submit"]', app); btn.disabled = true;
+    const b = await Auth.createBuilding({ name, city, postcode: zip, spots });
+    btn.disabled = false;
     if (!b) return formError(app, 'Something went wrong. Please try again.');
     go('#/buildingready');
   });
@@ -1689,33 +2349,35 @@ function viewProfile(app) {
     const t = bt.dataset.t; allergies.has(t) ? allergies.delete(t) : allergies.add(t);
     bt.setAttribute('aria-pressed', allergies.has(t));
   });
-  $('#pf').addEventListener('submit', (e) => {
+  $('#pf').addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = $('#pname').value.trim();
     if (!name) { toast('Please add your first name.'); return; }
-    Auth.setProfile({ name, allergies: [...allergies] });
+    if (!(await Auth.setProfile({ name, allergies: [...allergies] }))) return;
     toast('Profile saved'); render({ keepScroll: true });
   });
   $('#copycode').addEventListener('click', () => copyText(b.code, 'Code copied.'));
-  $('#newcode')?.addEventListener('click', () => {
-    if (confirm('Make a new code? The old code stops working for new neighbors.')) { DB.regenerateCode(b.id); toast('New code ready.'); render({ keepScroll: true }); }
+  $('#newcode')?.addEventListener('click', async () => {
+    if (confirm('Make a new code? The old code stops working for new neighbors.') && await DB.regenerateCode(b.id)) { toast('New code ready.'); render({ keepScroll: true }); }
   });
-  $$('[data-remove]').forEach((bt) => bt.addEventListener('click', () => {
-    if (confirm('Remove this neighbor from the building? Their posts are removed too.')) { DB.removeMember(user.id, bt.dataset.remove); toast('Neighbor removed.'); render({ keepScroll: true }); }
+  $$('[data-remove]').forEach((bt) => bt.addEventListener('click', async () => {
+    if (confirm('Remove this neighbor from the building? Their posts are removed too.') && await DB.removeMember(user.id, bt.dataset.remove)) { toast('Neighbor removed.'); render({ keepScroll: true }); }
   }));
-  $('#spotsf')?.addEventListener('submit', (e) => {
+  $('#spotsf')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const spots = [...new Set($('#spots').value.split('\n').map((s) => s.trim()).filter(Boolean))];
     const err = $('#err');
     if (!spots.length || spots.length > 8 || spots.some((s) => s.length > 40)) { err.textContent = 'Use 1 to 8 spots, each under 40 characters.'; err.hidden = false; return; }
-    DB.setSpots(b.id, spots); toast('Pickup spots saved.'); render({ keepScroll: true });
+    if (!(await DB.setSpots(b.id, spots))) return;
+    toast('Pickup spots saved.'); render({ keepScroll: true });
   });
-  $('#leave').addEventListener('click', () => {
-    if (confirm('Leave this building? Your posts and claims here are removed.')) { Auth.leaveBuilding(); toast('You left the building.'); go('#/join'); }
+  $('#leave').addEventListener('click', async () => {
+    if (confirm('Leave this building? Your posts and claims here are removed.') && await Auth.leaveBuilding()) { toast('You left the building.'); go('#/join'); }
   });
   $('#logout').addEventListener('click', logOut);
-  $('#delacc').addEventListener('click', () => {
-    if (confirm('Delete your account for good? Your posts and claims are removed.')) { Auth.deleteAccount(); toast('Account deleted.'); go('#/home'); }
+  $('#delacc').addEventListener('click', async () => {
+    if (!confirm('Delete your account for good? Your posts and claims are removed.')) return;
+    if (await deleteMyAccount()) { toast('Account deleted.'); go('#/home'); }
   });
   $('#reset')?.addEventListener('click', () => {
     if (confirm('Reset everything on this device back to the sample data? This removes all demo accounts and posts.')) { DB.reset(); toast('Demo data reset.'); go('#/home'); }
@@ -1729,7 +2391,7 @@ $('#bell').addEventListener('click', () => toast('Alerts are coming in a later v
 if (!persistOK) {
   $('#app').insertAdjacentHTML('beforebegin', `<div class="note demo" style="max-width:1088px;margin:8px auto 0" role="alert">Your browser blocks saving, so nothing you do will be kept after you close this page.</div>`);
 }
-render();
+if (APP.demo) { booted = true; render(); } else bootFirebase();
 </script>
 </body>
 </html>

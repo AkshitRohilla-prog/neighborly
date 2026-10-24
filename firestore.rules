@@ -1,0 +1,189 @@
+rules_version = '2';
+
+// Neighborly security rules.
+// Paste this whole file into Firebase console -> Firestore Database -> Rules -> Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- helpers ----------
+    function signedIn() { return request.auth != null; }
+    function verified() { return signedIn() && request.auth.token.email_verified == true; }
+    function me() { return request.auth.uid; }
+    function userDoc(id) { return /databases/$(database)/documents/users/$(id); }
+
+    // the building the signed-in person belongs to (null if none)
+    function myBuilding() {
+      return exists(userDoc(me())) ? get(userDoc(me())).data.buildingId : null;
+    }
+    function inBuilding(b) { return verified() && b != null && myBuilding() == b; }
+    function isAdmin(b) {
+      return verified() && b != null
+        && get(/databases/$(database)/documents/buildings/$(b)).data.adminId == me();
+    }
+    function validName(n) { return n is string && n.size() >= 1 && n.size() <= 30; }
+
+    // ---------- users: first name + which building (visible to the building) ----------
+    match /users/{id} {
+      allow get: if signedIn() && (id == me() || inBuilding(resource.data.buildingId));
+      allow list: if inBuilding(resource.data.buildingId);
+
+      allow create: if signedIn() && id == me()
+        && request.resource.data.keys().hasOnly(['name', 'buildingId', 'joinCode', 'createdAt'])
+        && request.resource.data.keys().hasAll(['name', 'buildingId', 'joinCode', 'createdAt'])
+        && request.resource.data.buildingId == null
+        && request.resource.data.joinCode == null
+        && validName(request.resource.data.name)
+        && request.resource.data.createdAt is number;
+
+      allow update: if signedIn() && ((id == me() && selfUpdate()) || adminRemoves());
+      allow delete: if signedIn() && id == me();
+
+      // you may change your name, leave your building, or join one (with its code, or by creating it in the same step)
+      function selfUpdate() {
+        let n = request.resource.data;
+        let o = resource.data;
+        return n.keys().hasOnly(['name', 'buildingId', 'joinCode', 'createdAt'])
+          && n.createdAt == o.createdAt
+          && validName(n.name)
+          && (n.buildingId == o.buildingId
+              || (n.buildingId == null && n.joinCode == null)
+              || (verified() && joinOk(n)));
+      }
+      function joinOk(n) {
+        return n.buildingId is string && (
+          (n.joinCode is string
+            && exists(/databases/$(database)/documents/codes/$(n.joinCode))
+            && get(/databases/$(database)/documents/codes/$(n.joinCode)).data.buildingId == n.buildingId)
+          ||
+          (!exists(/databases/$(database)/documents/buildings/$(n.buildingId))
+            && getAfter(/databases/$(database)/documents/buildings/$(n.buildingId)).data.adminId == me())
+        );
+      }
+      // the building admin may remove a member (only their building fields change)
+      function adminRemoves() {
+        let o = resource.data;
+        let n = request.resource.data;
+        return verified() && o.buildingId != null && n.buildingId == null && n.joinCode == null
+          && n.diff(o).affectedKeys().hasOnly(['buildingId', 'joinCode'])
+          && isAdmin(o.buildingId);
+      }
+    }
+
+    // ---------- profiles: private details (allergies), only the person themselves ----------
+    match /profiles/{id} {
+      allow read, delete: if signedIn() && id == me();
+      allow create, update: if signedIn() && id == me()
+        && request.resource.data.keys().hasOnly(['allergies'])
+        && request.resource.data.allergies is list
+        && request.resource.data.allergies.size() <= 4
+        && request.resource.data.allergies.hasOnly(['Nuts', 'Dairy', 'Gluten', 'Egg']);
+    }
+
+    // ---------- codes: look up ONE code (cannot be listed). The admin creates and removes them. ----------
+    match /codes/{code} {
+      allow get: if verified();
+      allow create: if verified()
+        && request.resource.data.keys().hasOnly(['buildingId', 'createdBy'])
+        && request.resource.data.createdBy == me()
+        && getAfter(/databases/$(database)/documents/buildings/$(request.resource.data.buildingId)).data.adminId == me()
+        && getAfter(/databases/$(database)/documents/buildings/$(request.resource.data.buildingId)).data.code.replace('-', '') == code;
+      allow delete: if isAdmin(resource.data.buildingId);
+    }
+
+    // ---------- buildings: members only ----------
+    match /buildings/{bid} {
+      allow get: if inBuilding(bid);
+      allow create: if verified() && request.resource.data.adminId == me() && validBuilding(request.resource.data);
+      allow update: if isAdmin(bid) && validBuilding(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAdmin(bid);
+    }
+    function validBuilding(d) {
+      return d.keys().hasOnly(['name', 'city', 'postcode', 'code', 'adminId', 'spots', 'createdAt'])
+        && d.name is string && d.name.size() >= 2 && d.name.size() <= 40
+        && d.city is string && d.city.size() <= 40
+        && d.postcode is string && d.postcode.size() <= 5
+        && d.code is string && d.code.size() == 9
+        && d.adminId is string
+        && d.spots is list && d.spots.size() >= 1 && d.spots.size() <= 8
+        && d.createdAt is number;
+    }
+
+    // ---------- posts: members of that building only ----------
+    match /posts/{pid} {
+      allow get, list: if inBuilding(resource.data.buildingId);
+
+      allow create: if inBuilding(request.resource.data.buildingId)
+        && request.resource.data.ownerId == me()
+        && request.resource.data.left == request.resource.data.total
+        && request.resource.data.gone == false
+        && validPost(request.resource.data);
+
+      // the owner can edit everything; any member can only change how many portions are left (claiming)
+      allow update: if inBuilding(resource.data.buildingId)
+        && request.resource.data.buildingId == resource.data.buildingId
+        && (
+          (resource.data.ownerId == me() && request.resource.data.ownerId == me() && validPost(request.resource.data))
+          ||
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['left'])
+            && request.resource.data.left is int
+            && request.resource.data.left >= 0
+            && request.resource.data.left <= resource.data.total)
+        );
+
+      allow delete: if inBuilding(resource.data.buildingId)
+        && (resource.data.ownerId == me() || isAdmin(resource.data.buildingId));
+    }
+    function validPost(d) {
+      return d.keys().hasOnly(['buildingId', 'ownerId', 'by', 'name', 'category', 'total', 'left', 'unit', 'ingredients',
+                               'cookedAt', 'until', 'spot', 'note', 'photo', 'tags', 'gone', 'createdAt'])
+        && d.keys().hasAll(['buildingId', 'ownerId', 'by', 'name', 'category', 'total', 'left', 'unit', 'ingredients',
+                            'cookedAt', 'until', 'spot', 'tags', 'gone', 'createdAt'])
+        && d.name is string && d.name.size() >= 1 && d.name.size() <= 60
+        && d.by is string && d.by.size() <= 30
+        && d.category in ['Meal', 'Fruit & veg', 'Baked', 'Other']
+        && d.total is int && d.total >= 1 && d.total <= 99
+        && d.left is int && d.left >= 0 && d.left <= d.total
+        && d.unit is string && d.unit.size() <= 12
+        && d.ingredients is string && d.ingredients.size() >= 3 && d.ingredients.size() <= 200
+        && d.spot is string && d.spot.size() >= 1 && d.spot.size() <= 60
+        && (!('note' in d) || (d.note is string && d.note.size() <= 200))
+        && (!('photo' in d) || d.photo == null || (d.photo is string && d.photo.size() <= 600000))
+        && d.tags is list && d.tags.size() <= 8
+        && d.gone is bool
+        && d.cookedAt is number && d.until is number && d.createdAt is number;
+    }
+
+    // ---------- claims: only the person who claimed and the giver ----------
+    match /claims/{cid} {
+      allow get, list: if verified() && resource.data.userId == me();
+      allow get, list: if verified() && resource.data.ownerId == me();
+
+      allow create: if inBuilding(request.resource.data.buildingId)
+        && request.resource.data.keys().hasOnly(['postId', 'buildingId', 'ownerId', 'userId', 'portions', 'at', 'status'])
+        && request.resource.data.userId == me()
+        && request.resource.data.ownerId != me()
+        && request.resource.data.status == 'ready'
+        && request.resource.data.portions is int
+        && request.resource.data.portions >= 1 && request.resource.data.portions <= 99
+        && get(/databases/$(database)/documents/posts/$(request.resource.data.postId)).data.ownerId == request.resource.data.ownerId
+        && get(/databases/$(database)/documents/posts/$(request.resource.data.postId)).data.buildingId == request.resource.data.buildingId;
+
+      allow update: if verified() && resource.data.userId == me()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status in ['picked', 'returned'];
+
+      allow delete: if verified() && (resource.data.userId == me() || resource.data.ownerId == me());
+    }
+
+    // ---------- reports: members can send one, nobody can read them in the app (use the console) ----------
+    match /reports/{rid} {
+      allow create: if inBuilding(request.resource.data.buildingId)
+        && request.resource.data.keys().hasOnly(['postId', 'buildingId', 'userId', 'reason', 'text', 'at'])
+        && request.resource.data.userId == me()
+        && request.resource.data.reason is string && request.resource.data.reason.size() <= 80
+        && request.resource.data.text is string && request.resource.data.text.size() <= 200;
+      allow read, update, delete: if false;
+    }
+  }
+}
